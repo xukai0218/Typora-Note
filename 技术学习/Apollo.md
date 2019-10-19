@@ -39,9 +39,15 @@ Java客户端不依赖任何框架，能够运行于所有Java运行时环境，
 ## 4、获取安装包
 
 1 直接下载安装包  GitHub地址：https://github.com/ctripcorp/apollo/releases
+
+
+
 	从GitHub Release页面下载预先打好的安装包
 	如果对Apollo的代码没有定制需求，建议使用这种方式，可以省去本地打包的过程
 2通过源码构建
+
+https://github.com/ctripcorp/apollo.git
+
 	从GitHub Release页面下载Source code包或直接clone源码后在本地构建
 	如果需要对Apollo的做定制开发，需要使用这种方式
 
@@ -51,8 +57,10 @@ Java客户端不依赖任何框架，能够运行于所有Java运行时环境，
  <dependency>
      <groupId>com.ctrip.framework.apollo</groupId>
      <artifactId>apollo-client</artifactId>
-     <version>1.1.2</version>
+     <version>1.4.0</version>
  </dependency>
+ 
+ 主类添加注解 @EnableApolloConfig
 ```
 
 
@@ -455,19 +463,18 @@ ConfigChangeEvent参数：虽然示例代码没有使用这个参数，但是它
 
 # 五、代码中使用
 
-## **1：通过**@Value
+## 1：通过Placeholder方式获取
 
 ```
 @Date
 public class TestJavaConfigBean {
 
     @Value("${timeout:100}")
-
     private int timeout;
 
     private int batch;
   }
---------------------------------------------------------------------------------------------- 
+ 
   @Configuration
   @EnableApolloConfig
   public class AppConfig {
@@ -477,13 +484,24 @@ public class TestJavaConfigBean {
       }
 
 }
+---------------------------------------------------------------------------------------------
+@RestController
+public class TestController {
+
+	@Value("${timeout:200}")
+	private Integer timeout;
+	
+	@RequestMapping("/test")
+	public String test(){
+		return "获取超时时间： "+timeout;
+	}
+}
 ```
 
 ## **2：通过**@ ConfigurationProperties
 
 ````
 @ConfigurationProperties(prefix = "redis.cache")
-
 public class SampleRedisConfig {
 
   private int expireSeconds;
@@ -511,11 +529,29 @@ public class AppConfig {
 }
 ````
 
-## **3：通过**@ **ApolloConfig****获取整个namespace的配置*
+## 3： 通过Spring 结合 API 方式
 
 ```
-
+@RestController
+public class TestController3 {
+ 
+ 	// 获取整个namespace的配置
+	@ApolloConfig
+	private Config config;
+	
+	@RequestMapping("/test3")
+	public String test() {
+		return "获取超时时间："+config.getIntProperty("timeout", 200);
+	}
 ```
+
+
+
+
+
+
+
+
 
 # 六、已有配置迁移
 

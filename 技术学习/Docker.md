@@ -46,9 +46,9 @@ docker容器(Container)：镜像启动后的实例称为一个容器；容器是
 
 
 
-## 4. 常用命令&操作
+# 二、Docker常用命令
 
-### 1）镜像操作
+##   1）镜像操作
 
 | 操作   | 命令                                       | 说明                                  |
 | ---- | ---------------------------------------- | ----------------------------------- |
@@ -59,41 +59,38 @@ docker容器(Container)：镜像启动后的实例称为一个容器；容器是
 
 https://hub.docker.com/
 
+## 2）容器操作命令
+
+| 操作                   | 命令                                       |
+| -------------------- | ---------------------------------------- |
+| 1、搜索镜像               | docker search tomcat                     |
+| 2、拉取镜像               | docker pull tomcat                       |
+| 3、根据镜像启动容器           | docker run --name mytomcat -d tomcat:latest |
+| 4、查看运行中的容器           | docker ps                                |
+| 5、查看所有的容器            | docker ps -a                             |
+| 6、 停止运行中的容器          | docker stop  容器的id                       |
+| 7、启动容器               | docker start 容器id                        |
+| 8、删除一个容器             | docker rm 容器id                           |
+| 9、查看容器的日志            | docker logs container-name/container-id  |
+|                      | docker logs -f   实时更新                    |
+|                      |                                          |
+| 10、启动一个做了端口映射的tomcat | docker run -d -p 8888:8080 tomcat        |
+|                      | -d：后台运行                                  |
+|                      | -p: 将主机的端口映射到容器的一个端口    主机端口:容器内部的端口     |
+| 进入容器                 | docker exec -it 容器id bash                |
+| 退出                   | Exit                                     |
+| 查询容器信息               | docker inspect 容器ID                      |
 
 
-### 2）容器操作
 
 软件镜像（QQ安装程序）----运行镜像----产生一个容器（正在运行的软件，运行的QQ）；
 
 步骤：
 
 ```
-1、搜索镜像
-[root@localhost ~]# docker search tomcat
-2、拉取镜像
-[root@localhost ~]# docker pull tomcat
-3、根据镜像启动容器
-docker run --name mytomcat -d tomcat:latest
-4、docker ps  
-查看运行中的容器
-5、 停止运行中的容器
-docker stop  容器的id
-6、查看所有的容器
-docker ps -a
-7、启动容器
-docker start 容器id
-8、删除一个容器
- docker rm 容器id
-9、启动一个做了端口映射的tomcat
-[root@localhost ~]# docker run -d -p 8888:8080 tomcat
--d：后台运行
--p: 将主机的端口映射到容器的一个端口    主机端口:容器内部的端口
-
 10、为了演示简单关闭了linux的防火墙
 service firewalld status ；查看防火墙状态
 service firewalld stop：关闭防火墙
-11、查看容器的日志
-docker logs container-name/container-id
 
 更多命令参看
 https://docs.docker.com/engine/reference/commandline/docker/
@@ -101,18 +98,14 @@ https://docs.docker.com/engine/reference/commandline/docker/
 
 ```
 
-### 3) docker 容器开机自动启动
+## 3) docker 容器开机自动启动
 
-``````
+```
 docker run --restart=always
-docker update --restart=always xxx
-``````
+docker update --restart=always 容器名字
+```
 
 
-
-# 二、Docker常用命令
-
-### 
 
 ```
 1、检查内核版本，必须是3.10及以上
@@ -133,11 +126,8 @@ systemctl stop docker
 
 
 
-### 2) 
-
 ```
-Docker 命令
-：
+Docker 命令：
 docker version
 docker images
 docker ps -a
@@ -152,116 +142,10 @@ systemctl status docker
 service docker start
 service docker restart
 service docker stop
-
 ```
 
 
 
+# 参考链接
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+https://cloud.tencent.com/developer/article/1478476

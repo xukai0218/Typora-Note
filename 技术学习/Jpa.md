@@ -1,24 +1,10 @@
+# 一、JPA简介
 
 JPA 是规范：JPA 本质上就是一种  ORM 规范，不是ORM 框架
 Hibernate 是实现：Hibernate 除了作为 ORM 框架之外，它也是一种 JPA 实现
 从功能上来说， JPA 是 Hibernate 功能的一个子集
 
-@Entity 标注用于实体类声明语句之前，指出该Java 类为实体类，将映射到指定的数据库表。
-		如声明一个实体类 Customer，它将映射到数据库中的 customer 表上
-@Table  当实体类与其映射的数据库表名不同名时需要使用与 @Entity 标注并列使用
 
-@Id 	标注用于声明一个实体类的属性映射为数据库的主键列  置于属性的getter方法之前@GeneratedValue  
-@GeneratedValue  用于标注主键的生成策略，通过 strategy 属性指定。
-				 默认情况下，JPA 自动选择一个最适合底层数据库的主键生成策略：SqlServer 对应 identity，MySQL 对应 auto increment。
-@Basic  没有任何标注的 getXxxx() 方法,默认即为@Basic
-
-
-@Column 当实体的属性与其映射的数据库表的列不同名时需要使用 name unique 、nullable、length
-​				 
-@Transient  表示该属性并非一个到数据库表的字段的映射,ORM框架将忽略该属性.
-			如果一个属性并非数据库表的字段映射,就务必将其标示为@Transient,否则,ORM框架默认其注解为@Basic
-
-@Temporal  进行属性映射时可使用@Temporal注解来调整精度. @Temporal(TemporalType.Date) @Temporal (TemporalType.TIMESTAMP)
 
 find()      			类似于 hibernate 中 Session 的 get 方法.
 						Customer customer = entityManager.find(Customer.class, 1);(实体类类型,实体的主键值)
@@ -78,11 +64,104 @@ session对象：hibernate  一级缓存对象
 		return customer;
 	}
 
+# Jpa注解
+
+| 注解              | 作用                                       |
+| --------------- | ---------------------------------------- |
+| @Basic          | 基本注解，默认有                                 |
+| @Entity         | 指出该Java类为实体类，将映射到指定的数据库                  |
+| @Table          | 标注常用name属性，用于指定数据库的表的名称 当实体类与其映射的数据库表名不同名时需要使用与 @Entity 标注并列使用 |
+| @Id             | 主键的映射                                    |
+| @GeneratedValue | 用于标注主键的生成策略，通过strategy属性指定               |
+| @Column         | 映射数据表的列名，指定unique，length等                |
+| @Temporal       | 在属性上调整精度，比如Date                          |
+| @Transient      | 忽略该属性，不需要映射到数据表的一列，否则默认为@Basic           |
+| @JoinColumn     | 用来映射外键                                   |
+| @JoinTable      | 插入表 多用于多对多或者一对多                          |
+| @OneToOne       | 映射一对一的关系                                 |
+| @OneToMany      | 映射少对多的关系                                 |
+| @ManyToOne      | 映射多对少的关系                                 |
+| @ManyToMany     | 映射多对对的关系                                 |
+
+## 常用属性详解
+
+- @Table的常用属性：
+  - name : 用来命名 当前实体类 对应的数据库 表的名字
+  - uniqueConstraints : 用来批量命名唯一键
+  - catalog : 实体指定的目录名或是数据库名
+  - schema : 实体指定的目录名或是数据库名
+- @Entity的常用属性：
+  - name : 实体的名称
+- @GeneratedValue的常用属性:
+  - strategy : ID的生成策略
+    - GenerationType.IDENTITY 主键由数据库自动生成（主要是自动增长型）
+    - GenerationType.AUTO 主键由程序控制
+    - GenerationType.TABLE 使用一个特定的数据库表格来保存主键
+    - GenerationType.SEQUENCE 根据底层数据库的序列来生成主键，条件是数据库支持序列
+- @Column相关属性：
+  - name : 对应的列表的名称
+  - unique : 是否是唯一
+  - nullable : 是否为空
+  - length : 长度
+  - insertable : 是否插入表
+  - updatable :是否更新表
+- @Temporal
+  - value : TemporalType.DATE,TemporalType.TIME,TemporalType.TIMESTAMP,以上三个参数分别表示年月日、时分秒、年与日时分秒
+- @JoinColumn部分参数:
+  - name : 表的名称，一般情况下默认，但是多对多的时候第三方表的时候需要填写
+  - referencedColumnName : 产生外键，依据的列的名称
+- @OneToOne、@OneToMany、@ManyToMany、@ManyToOne相关参数：
+  - targetEntity : 变量对应的类
+  - cascade : 关联级别
+  - fetch : 加载方式 FetchType.EAGER数据同步加 FetchType.LAZY 懒加载，使用的时候才会加载
+  - optional : 当其为false 真实关系必须存在 当其为true 可以不存在
+  - mappedBy : 放弃对外键的维护，数值为本类中在外键维护类中的变量名称
+  - orphanRemoval : 当执行级联操作删除时，如果此为true 那么就把关系被维护端的数据实体删除，false 不删除，删除的只是关系
+
+http://www.manongjc.com/article/25284.html
 
 
 
 
 
+
+
+
+
+## jpa 配置
+
+```
+spring.datasource.url=jdbc:mysql://localhost:3306/my_jpa?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8
+spring.datasource.username=root
+spring.datasource.password=mysql
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+
+spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=update
+
+```
+
+```
+create
+删除除上一次的生成的表，然后根据你的model类再重新来生成新表
+create-drop ： 
+每次加载hibernate时根据model类生成表，但是sessionFactory一关闭,表就自动删除。 
+update： 
+最常用的属性，第一次加载hibernate时根据model类会自动建立起表的结构（前提是先建立好数据库），以后加载hibernate时根据 model类自动更新表结构，即使表结构改变了但表中的行仍然存在不会删除以前的行。要注意的是当部署到服务器后，表结构是不会被马上建立起来的，是要等 应用第一次运行起来后才会。 
+validate ： 
+每次加载hibernate时，验证创建数据库表结构，只会和数据库中的表进行比较，不会创建新表，但是会插入新值
+
+ddl-auto:create----每次运行该程序，没有表格会新建表格，表内有数据会清空
+
+ddl-auto:create-drop----每次程序结束的时候会清空表
+
+ddl-auto:update----每次运行程序，没有表格会新建表格，表内有数据不会清空，只会更新
+
+ddl-auto:validate----运行程序会校验数据与数据库的字段类型是否相同，不同会报错
+
+none
+```
 
 
 
