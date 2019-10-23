@@ -141,9 +141,12 @@ spring.datasource.password = 1qwe32!QWE#@
 3）/script/startup.sh
 SERVER_PORT=9100
 LOG_DIR=/opt/logs/100003172
-export JAVA_OPTS="-server -Xms6144m -Xmx6144m -Xss256k -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m -XX:NewSize=4096m -XX:MaxNewSize=4096m -XX:SurvivorRatio=18"
 
 ```
+
+
+
+
 
 打包慢
 
@@ -161,11 +164,7 @@ export JAVA_OPTS="-server -Xms6144m -Xmx6144m -Xss256k -XX:MetaspaceSize=128m -X
 ##### apollo-configservice-1.5.0.zip
 
 ```
-1)/config/application-github.properties
 
-修改端口 日志路径 jvm	
-2）/script/startup.sh
-同上
 ```
 
 
@@ -173,11 +172,7 @@ export JAVA_OPTS="-server -Xms6144m -Xmx6144m -Xss256k -XX:MetaspaceSize=128m -X
 ##### apollo-adminservice-1.5.0.zip
 
 ```
-1)/config/application-github.properties
 
-修改端口 日志路径 jvm	
-2）/script/startup.sh
-同上
 ```
 
 
@@ -214,6 +209,63 @@ apollo.bootstrap.eagerLoad.enabled=true
 # apollo 使用配置的命名空间，多个以逗号分隔
 apollo.bootstrap.namespaces = application
 ```
+
+
+
+## 5、Jvm内存 设置
+
+
+
+```
+export JAVA_OPTS="-Xms512m -Xmx512m -XX:PermSize=128m -XX:MaxPermSize=512m"
+
+```
+
+前十
+
+```
+ps aux | sort -k4,4nr | head -n 10
+```
+
+
+
+
+
+
+
+
+
+#### 1、apollo-configservice
+
+```
+export JAVA_OPTS="-server -Xms6144m -Xmx6144m -Xss256k -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m -XX:NewSize=4096m -XX:MaxNewSize=4096m -XX:SurvivorRatio=18"
+
+1)/config/application-github.properties
+
+修改端口 日志路径 jvm	
+2）/script/startup.sh
+同上
+```
+
+#### 2、apollo-adminservice
+
+```
+export JAVA_OPTS="-server -Xms2560m -Xmx2560m -Xss256k -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m -XX:NewSize=1024m -XX:MaxNewSize=1024m -XX:SurvivorRatio=22"
+
+1)/config/application-github.properties
+
+修改端口 日志路径 jvm	
+2）/script/startup.sh
+同上
+```
+
+#### 3、apollo-portal 
+
+```
+export JAVA_OPTS="-server -Xms4096m -Xmx4096m -Xss256k -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=384m -XX:NewSize=1536m -XX:MaxNewSize=1536m -XX:SurvivorRatio=22"
+```
+
+
 
 
 

@@ -1,5 +1,11 @@
 /dev/mapper/rhel-root
 
+内存
+
+```
+free -m 
+```
+
 
 
 

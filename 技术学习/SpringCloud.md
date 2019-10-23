@@ -40,6 +40,29 @@ Eureka 采用了 C-S 的设计架构。Eureka Server 作为服务注册功能的
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-config</artifactId>
 		</dependency>
+		<!-- feign相关 -->
+		<dependency>
+               <groupId>org.springframework.cloud</groupId>
+               <artifactId>spring-cloud-starter-feign</artifactId>
+   		</dependency>
+   		
+   		   <!--  hystrix -->
+         <dependency>
+           <groupId>org.springframework.cloud</groupId>
+           <artifactId>spring-cloud-starter-hystrix</artifactId>
+         </dependency>
+
+            <!-- actuator监控信息完善 -->
+         <dependency>
+           <groupId>org.springframework.boot</groupId>
+           <artifactId>spring-boot-starter-actuator</artifactId>
+         </dependency>
+         
+         <!-- zuul -->
+          <dependency>
+           <groupId>org.springframework.cloud</groupId>
+           <artifactId>spring-cloud-starter-zuul</artifactId>
+         </dependency>
 
 <build>
    <finalName>microservicecloud</finalName>
@@ -262,7 +285,14 @@ eureka:
       defaultZone: http://eureka7001.com:7001/eureka/,http://eureka7002.com:7002/eureka/,http://eureka7003.com:7003/eurek
 ```
 
-## 3、注解**@LoadBalanced** @EnableEurekaClient
+## 3、注解
+
+```
+@EnableEurekaClient
+@LoadBalanced 
+```
+
+
 
 1、主启动类DeptConsumer80_App添加@EnableEurekaClient
 
@@ -324,42 +354,282 @@ public class ConfigBean //boot -->spring   applicationContext.xml --- @Configura
 
 # 三、Feign负载均衡
 
+##  0、介绍
 
 
+官网解释：
+http://projects.spring.io/spring-cloud/spring-cloud.html#spring-cloud-feign
 
+ Feign是一个声明式WebService客户端。使用Feign能让编写Web Service客户端更加简单, 它的使用方法是定义一个**接口，然后在上面添加注解**，同时也支持JAX-RS标准的注解。Feign也支持可拔插式的编码器和解码器。Spring Cloud对Feign进行了封装，使其支持了Spring MVC标准注解和HttpMessageConverters。Feign可以与Eureka和Ribbon组合使用以支持负载均衡。
+ ；
 
-之前用ribbon进行负载均衡 功能强大 定义算法
+ **Feign是一个声明式的Web服务客户端**，使得编写Web服务客户端变得非常容易，
+**只需要创建一个接口，然后在上面添加注解即可**。
+参考官网：https://github.com/OpenFeign/feign 
 
-Feign 怎么出来?
-
-Feign是一个声明式的Web服务客户端，使得编写Web服务客户端变得非常容易，
-只需要创建一个接口，然后在上面添加注解即可。
-
-1
-2 目前都习惯面向接口编程 比如webService接口 比如Dao接口 规范
-	2.1 微服务名字获得调用地址
-	2.2 通过接口+注解获得 服务
-统一的面向接口编程的套路
-
-
-Spring Cloud Ribbon是基于Netflix Ribbon实现的一套客户端       负载均衡的工具。
-
-简单的说，Ribbon是Netflix发布的开源项目，主要功能是提供客户端的软件负载均衡算法，将Netflix的中间层服务连接在一起。Ribbon客户端组件提供一系列完善的配置项如连接超时，重试等。简单的说，就是在配置文件中列出Load Balancer（简称LB）后面所有的机器，Ribbon会自动的帮助你基于某种规则（如简单轮询，随机连接等）去连接这些机器。我们也很容易使用Ribbon实现自定义的负载均衡算法。
-
-
-​		
-LB，即负载均衡(Load Balance)，在微服务或分布式集群中经常用的一种应用。		
-​		
-​		
-Feign是一个声明式的Web服务客户端，使得编写Web服务客户端变得非常容易，
-只需要创建一个接口，然后在上面添加注解即可。		
-​		
- Feign能干什么
+ Feign能干什么
 Feign旨在使编写Java Http客户端变得更容易。
-前面在使用Ribbon+RestTemplate时，利用RestTemplate对http请求的封装处理，形成了一套模版化的调用方法。但是在实际开发中，由于对服务依赖的调用可能不止一处，往往一个接口会被多处调用，所以通常都会针对每个微服务自行封装一些客户端类来包装这些依赖服务的调用。所以，Feign在此基础上做了进一步封装，由他来帮助我们定义和实现依赖服务接口的定义。在Feign的实现下，我们只需创建一个接口并使用注解的方式来配置它(以前是Dao接口上面标注Mapper注解,现在是一个微服务接口上面标注一个Feign注解即可)，即可完成对服务提供方的接口绑定，简化了使用Spring cloud Ribbon时，自动封装服务调用客户端的开发量。		
-​		
+前面在使用Ribbon+RestTemplate时，利用RestTemplate对http请求的封装处理，形成了一套模版化的调用方法。但是在实际开发中，由于对服务依赖的调用可能不止一处，往往一个接口会被多处调用，所以通常都会针对每个微服务自行封装一些客户端类来包装这些依赖服务的调用。所以，Feign在此基础上做了进一步封装，由他来帮助我们定义和实现依赖服务接口的定义。在Feign的实现下，我们只需创建一个接口并使用注解的方式来配置它(以前是Dao接口上面标注Mapper注解,现在是一个微服务接口上面标注一个Feign注解即可)，即可完成对服务提供方的接口绑定，**简化了使用Spring cloud Ribbon时，自动封装服务调用客户端的开发量。**
 
-Hystrix 断路器 避免单个出问题 导致服务挂了		
 
-降级 整体资源快不够了,忍痛将某些服务先关掉,待度过难关,在开启回来		
-​		
+Feign集成了Ribbon
+利用Ribbon维护了MicroServiceCloud-Dept的服务列表信息，并且通过轮询实现了客户端的负载均衡。而与Ribbon不同的是，通过feign只需要定义服务绑定接口且以声明式的方法，优雅而简单的实现了服务调用
+
+##  1、pom
+
+```
+   <dependency>
+     <groupId>org.springframework.cloud</groupId>
+     <artifactId>spring-cloud-starter-feign</artifactId>
+   </dependency>
+```
+
+## 2、接口+注解
+
+1）启动类
+
+```
+@EnableFeignClients(basePackages= {"com.xxx.springcloud"})
+```
+
+2）接口+注解
+
+```
+@FeignClient(value = "MICROSERVICECLOUD-DEPT",fallbackFactory=DeptClientServiceFallbackFactory.class)
+public interface DeptClientService
+{
+	@RequestMapping(value = "/dept/get/{id}", method = RequestMethod.GET)
+	public Dept get(@PathVariable("id") long id);
+
+	@RequestMapping(value = "/dept/list", method = RequestMethod.GET)
+	public List<Dept> list();
+
+	@RequestMapping(value = "/dept/add", method = RequestMethod.POST)
+	public boolean add(Dept dept);
+}
+```
+
+
+
+#  四、Hystrix断路器
+
+## 0、介绍
+
+ 分布式系统面临的问题
+复杂分布式体系结构中的应用程序有数十个依赖关系，每个依赖关系在某些时候将不可避免地失败。
+
+
+服务雪崩
+多个微服务之间调用的时候，假设微服务A调用微服务B和微服务C，微服务B和微服务C又调用其它的微服务，这就是所谓的“扇出”。如果扇出的链路上某个微服务的调用响应时间过长或者不可用，对微服务A的调用就会占用越来越多的系统资源，进而引起系统崩溃，所谓的“雪崩效应”.
+
+对于高流量的应用来说，单一的后端依赖可能会导致所有服务器上的所有资源都在几秒钟内饱和。比失败更糟糕的是，这些应用程序还可能导致服务之间的延迟增加，备份队列，线程和其他系统资源紧张，导致整个系统发生更多的级联故障。这些都表示需要对故障和延迟进行隔离和管理，以便单个依赖关系的失败，不能取消整个应用程序或系统。
+
+
+
+**Hystrix是一个用于处理分布式系统的延迟和容错的开源库**，在分布式系统里，许多依赖不可避免的会调用失败，比如超时、异常等，Hystrix能够保证在**一个依赖出问题的情况下，不会导致整体服务失败，避免级联故障**，以提高分布式系统的弹性。
+
+“断路器”本身是一种开关装置，当某个服务单元发生故障之后，通过断路器的故障监控（类似熔断保险丝），**向调用方返回一个符合预期的、可处理的备选响应（FallBack）**，而不是长时间的等待或者抛出调用方无法处理的异常，这样就保证了服务调用方的线程不会被长时间、不必要地占用，从而避免了故障在分布式系统中的蔓延，乃至雪崩。
+
+
+
+## 1、pom
+
+```
+   <!--  hystrix -->
+   <dependency>
+     <groupId>org.springframework.cloud</groupId>
+     <artifactId>spring-cloud-starter-hystrix</artifactId>
+   </dependency>
+   
+      <!-- actuator监控信息完善 -->
+   <dependency>
+     <groupId>org.springframework.boot</groupId>
+     <artifactId>spring-boot-starter-actuator</artifactId>
+   </dependency>
+```
+
+2、.yml
+
+```
+feign: 
+  hystrix: 
+    enabled: true
+```
+
+
+
+## 3、注解
+
+```
+@EnableCircuitBreaker
+@HystrixCommand
+@EnableHystrixDashboard
+```
+
+
+
+## 3、能干嘛
+
+### 1）服务熔断
+
+熔断机制是应对雪崩效应的一种微服务链路保护机制。
+当扇出链路的某个微服务不可用或者响应时间太长时，**会进行服务的降级，进而熔断该节点微服务的调用，快速返回"错误"的响应信息**。当检测到该节点微服务调用响应正常后恢复调用链路。在SpringCloud框架里熔断机制通过Hystrix实现。Hystrix会监控微服务间调用的状况，当失败的调用到一定阈值，缺省是5秒内20次调用失败就会启动熔断机制。熔断机制的注解是**@HystrixCommand**。
+
+
+
+一旦调用服务方法失败并抛出了错误信息后，会自动**调用@HystrixCommand标注好的fallbackMethod调用类中的指定方法**
+
+**@Component // 不要忘记添加，不要忘记添加**
+
+```
+@FeignClient(value = "MICROSERVICECLOUD-DEPT",fallbackFactory=DeptClientServiceFallbackFactory.class)
+public interface DeptClientService
+{
+	@RequestMapping(value = "/dept/get/{id}", method = RequestMethod.GET)
+	public Dept get(@PathVariable("id") long id);
+
+	@RequestMapping(value = "/dept/list", method = RequestMethod.GET)
+	public List<Dept> list();
+
+	@RequestMapping(value = "/dept/add", method = RequestMethod.POST)
+	public boolean add(Dept dept);
+}
+----------------------------------------------------------------------------------------
+@Component // 不要忘记添加，不要忘记添加
+public class DeptClientServiceFallbackFactory implements FallbackFactory<DeptClientService>
+{
+	@Override
+	public DeptClientService create(Throwable throwable)
+	{
+		return new DeptClientService() {
+			@Override
+			public Dept get(long id)
+			{
+				return new Dept().setDeptno(id).setDname("该ID：" + id + "没有没有对应的信息,Consumer客户端提供的降级信息,此刻服务Provider已经关闭")
+						.setDb_source("no this database in MySQL");
+			}
+
+			@Override
+			public List<Dept> list()
+			{
+				return null;
+			}
+
+			@Override
+			public boolean add(Dept dept)
+			{
+				return false;
+			}
+		};
+	}
+}
+```
+
+
+
+
+
+
+
+###  2) 服务降级
+
+ 整体资源快不够了，忍痛将某些服务先关掉，待渡过难关，再开启回来。
+
+
+
+**客户端**自己调用提示
+
+ 此时服务端provider已经down了，但是我们做了服务降级处理，**让客户端在服务端不可用时也会获得提示信息而不会挂起耗死服务器**
+
+
+
+### 3) 服务监控hystrixDashboard
+
+ 除了隔离依赖服务的调用以外，Hystrix还提供了**准实时的调用监控（Hystrix Dashboard）**，Hystrix会持续地记录所有通过Hystrix发起的请求的执行信息，并以统计报表和图形的形式展示给用户，包括每秒执行多少请求多少成功，多少失败等。Netflix通过hystrix-metrics-event-stream项目实现了对以上指标的监控。Spring Cloud也提供了Hystrix Dashboard的整合，对**监控内容转化成可视化界面**。
+
+ 注解
+
+```
+@EnableHystrixDashboard
+```
+
+
+
+ localhost:9001/hystrix
+
+ 
+
+ 
+
+#   五、zuul路由网关
+
+## 0、介绍
+
+官网资料 ：https://github.com/Netflix/zuul/wiki/Getting-Started
+
+ Zuul包含了对请求的**路由**和**过滤**两个最主要的功能：
+其中路由功能负责将外部请求转发到具体的微服务实例上，是实现外部访问统一入口的基础而过滤器功能则负责对请求的处理过程进行干预，是实现请求校验、服务聚合等功能的基础.
+
+
+**Zuul和Eureka进行整合**，将Zuul自身注册为Eureka服务治理下的应用，同时从Eureka中获得其他微服务的消息，也即以后的访问微服务都是通过Zuul跳转后获得。
+
+    注意：**Zuul服务最终还是会注册进Eureka**
+
+**提供=代理+路由+过滤三大功能**
+
+## 1、pom
+
+```
+   <dependency>
+     <groupId>org.springframework.cloud</groupId>
+     <artifactId>spring-cloud-starter-zuul</artifactId>
+   </dependency>
+```
+
+##  2、注解
+
+```
+@EnableZuulProxy
+```
+
+
+
+不用路由:http://localhost:8001/dept/get/2
+
+用路由:http://myzuul.com:9527/microservicecloud-dept/dept/get/2
+
+ 
+
+##  3、yml 路由访问映射规则
+
+统一前缀 、原真实服务名忽略
+
+```
+ before
+http://myzuul.com:9527/microservicecloud-dept/dept/get/2
+ 
+zuul: 
+  prefix: /kai
+  ignored-services: "*"
+  routes: 
+    mydept.serviceId: microservicecloud-dept
+    mydept.path: /mydept/**
+ 
+after
+http://myzuul.com:9527/mydept/dept/get/1
+```
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
