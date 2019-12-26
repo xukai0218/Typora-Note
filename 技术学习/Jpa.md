@@ -83,6 +83,25 @@ session对象：hibernate  一级缓存对象
 | @ManyToOne      | 映射多对少的关系                                 |
 | @ManyToMany     | 映射多对对的关系                                 |
 
+ @Modifying注解
+　　　　1、在@Query注解中编写JPQL实现DELETE和UPDATE操作的时候必须加上@modifying注解，以通知Spring Data 这是一个DELETE或UPDATE操作。
+
+　　　　2、UPDATE或者DELETE操作需要使用事务，此时需要 定义Service层，在Service层的方法上添加事务操作。
+
+　　　　3、注意JPQL不支持INSERT操作。
+
+
+
+
+
+实体类上增加：
+
+```
+@Entity
+@DynamicInsert
+@DynamicUpdate
+```
+
 ## 常用属性详解
 
 - @Table的常用属性：
@@ -163,17 +182,54 @@ ddl-auto:validate----运行程序会校验数据与数据库的字段类型是�
 none
 ```
 
+# @query的传入参数是对象匹配参数
+
+**:#{#req.totalAmount}**
+
+ @Param(value = "**req**") 可写可不写
+
+```
+    @Modifying
+    @Transactional(rollbackFor = Exception.class)
+    @Query(value = "update OrderSaleEntity orders set " +
+            "orders.totalAmount = :#{#req.totalAmount} ," +
+            "orders.discount=:#{#req.discount},orders.remark=:#{#req.remark},orders.lastUpdatedAt=current_timestamp  " +
+            "where orders.id = ?1")
+    void updateOrder(Long orderId, @Param("req") UpdateOrderReq req);
+```
 
 
 
+## 使用原生的sql 进行数据查询
+
+```
+ //
+    @Query(value = "select * from  student where  class_num = ?1",nativeQuery = true)
+    public List<Student> selectStudentByClassNum(String classNum);
+```
 
 
 
+## 排序
+
+```
+ Sort sort = new Sort(Sort.Direction.fromString(orderType), orderField);
+  PageRequest pageable = PageRequest.of(pageIndex, pageSize, new Sort(Sort.Direction.DESC, "createdAt"));
+```
 
 
 
+## 手动回滚事务
 
+1. ```
+   @Transactional(rollbackFor = Exception.class)
 
+   TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();  
+   ```
+
+   ​
+
+   ​
 
 
 

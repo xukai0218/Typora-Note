@@ -4,9 +4,10 @@
 
 ```
 free -m 
+free -h
 ```
 
-
+netstat -lnpt
 
 
 
