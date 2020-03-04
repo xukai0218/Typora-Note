@@ -33,4 +33,36 @@ package命令：完成项目编译、单元测试、打包功能，但打包文�
 install命令：完成项目编译、单元测试、打包功能，同时把打包文件部署到本地Maven仓库，但未部署到远程Maven仓库。
 deploy命令：完成项目编译、单元测试、打包功能，同时把打包文件部署到本地Maven仓库和远程Maven仓库。
 
-## 
+## 全局配置文件
+
+```
+        <server>
+            <id>maven-repository-releases</id>
+            <username>admin</username>
+            <password>admin123</password>
+        </server>
+
+        <server>
+            <id>maven-repository-snapshots</id>
+            <username>admin</username>
+            <password>admin123</password>
+        </server>
+```
+
+pom配置
+
+```
+    <distributionManagement>
+        <repository>
+            <!-- 这里的ID要和setting的id一致 -->
+            <id>maven-repository-releases</id>
+            <url>http://maven.ruigu.com/repository/maven-releases/</url>
+        </repository>
+        <!--这是打成快照版本的配置，如果不用这个snapshotRepository标签，打包失败，会报权限问题 -->
+        <snapshotRepository>
+            <id>maven-repository-snapshots</id>
+            <url>http://maven.ruigu.com/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement
+```
+

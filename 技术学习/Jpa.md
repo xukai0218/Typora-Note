@@ -227,9 +227,82 @@ none
    TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();  
    ```
 
-   ​
+   
 
-   ​
+   # and or 
+
+```
+ public ServerResponse queryOrderByShopId(OrderQuery query) {
+        Specification<OrderSaleEntity> specification = (Specification<OrderSaleEntity>) (root, criteriaQuery, criteriaBuilder) -> {
+            List<Predicate> orPredicates = new ArrayList<>();
+            List<Predicate> predicates = new ArrayList<>();
+            Predicate orPredicate;
+            if (query.getShopId() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("shopId"), query.getShopId()));
+            }
+            if (query.getStatus() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("orderStatus"), query.getStatus()));
+            }
+            // 首页 发货 支付 九宫格订单 查询状态不等于2(完成)
+            if (query.getDeliveryStatus() != null) {
+                if (query.getDeliveryStatus().equals(OrderStatusEnum.SHIPPED.getCode())) {
+                    predicates.add(criteriaBuilder.equal(root.get("deliveryStatus"), OrderStatusEnum.SHIPPED.getCode()));
+                } else {
+                    predicates.add(criteriaBuilder.notEqual(root.get("deliveryStatus"), OrderStatusEnum.SHIPPED.getCode()));
+                }
+                predicates.add(criteriaBuilder.equal(root.get("deleted"), YesOrNoEnum.NO.getCode()));
+            }
+            // 备货状态 (orderStatus=1 deliveryStatus not in(2))
+            if (query.getStockStatus() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("orderStatus"), OrderStatusEnum.TRADING_IN.getCode()));
+                predicates.add(criteriaBuilder.notEqual(root.get("deliveryStatus"), OrderStatusEnum.SHIPPED.getCode()));
+            }
+
+            if (query.getPaidStatus() != null) {
+                predicates.add(criteriaBuilder.notEqual(root.get("paidStatus"), query.getPaidStatus()));
+                predicates.add(criteriaBuilder.equal(root.get("deleted"), YesOrNoEnum.NO.getCode()));
+            }
+            if (query.getStartDate() != null && query.getEndDate() != null) {
+                predicates.add(criteriaBuilder.between(root.get("createdAt"), query.getStartDate(), query.getEndDate()));
+            }
+            if (query.getCustomerId() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("customerId"), query.getCustomerId()));
+            }
+
+            // 售后订单 不显示 取消作废订单
+            if (query.getAfterSaleStatus() != null) {
+                predicates.add(criteriaBuilder.notEqual(root.get("afterSaleStatus"), query.getAfterSaleStatus()));
+                predicates.add(criteriaBuilder.between(root.get("orderStatus"), 0, 2));
+            }
+            // 是否欠账订单
+            if (query.getDebtStatus() != null) {
+                predicates.add(criteriaBuilder.equal(root.get("debtStatus"), query.getDebtStatus()));
+            }
+            Predicate andPredicate = criteriaBuilder.and(predicates.toArray(new Predicate[predicates.size()]));
+            //模糊查询
+            //判断关键字是否为联系人
+            if (StringUtils.isNotBlank(query.getKeyword())) {
+                //判断关键字是否为数字
+                orPredicates.add(criteriaBuilder.like(root.get("consigneePhone").as(String.class), "%" + query.getKeyword() + "%"));
+                orPredicates.add(criteriaBuilder.like(root.get("orderNumber").as(String.class), "%" + query.getKeyword() + "%"));
+                orPredicates.add(criteriaBuilder.like(root.get("consignee").as(String.class), "%" + query.getKeyword() + "%"));
+                orPredicate = criteriaBuilder.or(orPredicates.toArray(new Predicate[orPredicates.size()]));
+                // 合并
+                return criteriaQuery.where(andPredicate, orPredicate).getRestriction();
+            }
+            return andPredicate;
+        };
+        Pageable pageable = PageRequest.of(query.getPage(), query.getSize(), new Sort(Sort.Direction.DESC, "lastUpdatedAt"));
+
+        Page<OrderSaleEntity> page = orderSaleRepository.findAll(specification, pageable);
+
+        Function<OrderSaleEntity, OrderSaleVO> function = (entity) -> {
+            OrderSaleVO vo = new OrderSaleVO();
+            BeanUtils.copyProperties(entity, vo);
+            setParm(entity, vo);
+            return vo;
+        };
+```
 
 
 

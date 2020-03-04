@@ -48,17 +48,119 @@ AMQP核心概念
 
 
 
+P(生产) ->{ exchange -> queue} -> c(消费)
+
+
+
+Exchange  routing key
+
+# 安装使用
+
+官网地址 : http://www.rabbitma.com/
+
+提前准备: 安装Linux必要依赖包
+
+下载RabbitMQ 安装包
+
+修改配置
+
+```
+准备：
+yum install 
+build-essential openssl openssl-devel unixODBC unixODBC-devel 
+make gcc gcc-c++ kernel-devel m4 ncurses-devel tk tc xz
+
+下载：
+wget www.rabbitmq.com/releases/erlang/erlang-18.3-1.el7.centos.x86_64.rpm
+wget http://repo.iotti.biz/CentOS/7/x86_64/socat-1.7.3.2-5.el7.lux.x86_64.rpm
+wget www.rabbitmq.com/releases/rabbitmq-server/v3.6.5/
+
+
+配置文件：
+vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
+比如修改密码、配置等等，例如：loopback_users 中的 <<"guest">>,只保留guest
+服务启动和停止：
+启动 rabbitmq-server start &
+停止 rabbitmqctl app_stop
+
+管理插件：rabbitmq-plugins enable rabbitmq_management
+访问地址：http://192.168.11.76:15672/
+
+
+rpm 安装顺序
+rpm -ivh erlang-18.3-1.el7.centos.x86_64.rpm
+socat-1.7.3.2-5.el7.lux.x86_64.rpm
+rabbitmq-server-3.6.5-1.noarch.rpm
+异常:
+
+连接不上 请开启端口
+firewall-cmd --add-port=15672/tcp --permanent
+firewall-cmd --reload
+ 查看 开启端口 firewall-cmd --list-all
+ lsof -i:15672
+
+```
+
+
+
+```
+http://192.168.2.10:15672  管控台    5672 (java 通信端口号)25672  集群 通信端口号
+```
+
+
+
+# 命令行与管控台操作
+
+```
+rabbitmqctl stop_v rabbitmgctl stop app:关闭应用
+rabbitmgctl start app:启动应用
+rabbitmgctl status:节点状态
+rabbitmgctl add user username password:添加用户
+rabbitmgctl list users:列出所有用户
+rabbitmgctl delete user username:删除用户
+rabbitmgctl clear permissions-pⅦ hostpath username:清除用户权限
+rabbitmgctl list user permissions username:列出用户权限
+rabbitmgctl change password username newpassword:修改密码
+rabbitmqctl set permissions-p Vhostpath username
+*"".*""":设置用户权限
+rabbitmgctl add vhost vhostpath:创建虚拟主机
+rabbitmgctl list vhosts:列出所有虚拟主机
+rabbitmgctl list permissions-pⅦ hostpath:列出虚拟主机上所有权限
+rabbitmgctl delete vhost vhostpath:删除虚拟主机
+rabbitmgcti list queues:查看所有队列信息
+rabbitmgct- o vhostpath purge queue blue:清除队列里的消息
+
+rabbitmgctl reset:移除所有数据,要在 abbitmgctI stop app之后使用
+rabbitmgctl join cluster< clusternode>[-ram:组成集群命令
+rabbitmgctl cluster status:查看集群状态
+
+rabbitmqctl change cluster node type disc ram
+修改集群节点的存储形式
+rabbitmgctl forget cluster node[- offline忘记节点(摘除节点)
+rabbitmgctl rename cluster node oldnode1 newnode 1 [oldnode2
+[ newnode2.](修改节点名称)
+```
 
 
 
 
 
+交换机属性
+Name:交换机名称
+Type∶交换机类型 direct、 topIC、 fanout、 headers
+Durability:是否需要持久化,true为持久化
+
+Auto delete:当最后一个绑定到 Exchange上的队列删除后,自动删除该 Exchange
+Internal:当前 Exchange是否用于 RabbitMO内部使用,默认为 False
+Arguments:扩展参数,用于扩展AMQP协议自制定化使用
 
 
 
-
-
-
+Direct Exchange
+所有发送到 Direct Exchange的消息被转发到 RouteKey中指定的 Queue
+注意: Direct模式可以使用 RabbitMQ自带的 Exchange: default
+Exchange,所以不需要将 Exchange进行任何绑定( binding)操作,消息传
+递时, Routekey必须完全匹配才会被队列接收,否则该消息会被抛弃
 
 
 

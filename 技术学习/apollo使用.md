@@ -194,3 +194,28 @@ http://192.168.1.68:9100
 ```
 https://www.toyaml.com/index.html
 ```
+
+
+
+补充
+
+```
+@Target({ElementType.TYPE})
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@EnableApolloConfig
+@Import(AutoApolloConfiguration.class)
+public @interface EnableConfigClient {
+
+}
+
+
+public class AutoApolloConfiguration {
+
+    @Bean
+    public ApolloConfigChanged apolloConfigChanged() {
+        return new ApolloConfigChanged();
+    }
+}
+```
+
