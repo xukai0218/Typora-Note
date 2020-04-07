@@ -1,6 +1,6 @@
 /dev/mapper/rhel-root
 
-内存
+# 内存
 
 ```
 free -m 
@@ -15,7 +15,7 @@ df -h 磁盘
 
 
 
-三、xshell连接虚拟机
+# 三、xshell连接虚拟机
 
 1.连接xshell需要开通虚拟机的22端口
 
@@ -112,8 +112,10 @@ pid=`ps -ef |grep eureka-server-0.0.1-SNAPSHOT.jar |grep ${env} |awk '{print $2}
 
 ```
 cd /etc/init.d
-chkconfig --add
-chkconfig --list
+chkconfig --add xxx
+chkconfig --list 
+.在 /etc/init.d目录下执行：service eureka start 命令，验证一下该脚本能否可以正常执行；
+chkconfig eureka on 　　# 重启后永久生效
 ```
 
 开机启动eureka 服务
