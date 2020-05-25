@@ -1,0 +1,30 @@
+spring:
+  shardingsphere:
+    datasource:
+      names: master0,master0slave0,master0slave1
+      master0:
+        jdbcUrl: jdbc:mysql://localhost:3306/master0?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      master0slave0:
+        jdbcUrl: jdbc:mysql://localhost:3306/master0slave0?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      master0slave1:
+        jdbcUrl: jdbc:mysql://localhost:3306/master0slave1?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    masterslave: #主从配置
+      name: ms
+      load-balance-algorithm-type: round_robin  # round_robin（轮询）和random（随机）。
+      master-data-source-name:  master0
+      slave-data-source-names: master0slave0,master0slave1
+    props:
+      sql:
+        show: true

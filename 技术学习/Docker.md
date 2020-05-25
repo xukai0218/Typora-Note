@@ -103,6 +103,11 @@ https://docs.docker.com/engine/reference/commandline/docker/
 ```
 docker run --restart=always
 docker update --restart=always 容器名字
+no -  容器退出时，不重启容器；
+
+on-failure - 只有在非0状态退出时才从新启动容器；
+
+always - 无论退出状态是如何，都重启容器
 ```
 
 
@@ -143,6 +148,247 @@ service docker start
 service docker restart
 service docker stop
 ```
+
+# 三 Docker安装
+
+## 1、docker 离线安装
+
+[*docker安装包下载地址*](https://download.docker.com/linux/centos/7/x86_64/stable/Packages/)
+
+需要下载的docker安装包：
+
+[[docker-ce-cli-18.09.6-3.el7.x86_64.rpm](https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-ce-cli-18.09.6-3.el7.x86_64.rpm)
+
+[docker-ce-18.09.6-3.el7.x86_64.rpm](https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-ce-18.09.6-3.el7.x86_64.rpm)
+
+[containerd.io-1.2.5-3.1.el7.x86_64.rpm](https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.5-3.1.el7.x86_64.rpm)
+
+需要依赖的包：
+
+[container-selinux-2.9-4.el7.noarch.rpm](ftp.pbone.net/mirror/ftp.scientificlinux.org/linux/scientific/7x/external_products/extras/x86_64/container-selinux-2.9-4.el7.noarch.rpm)
+
+
+
+```
+第一步, 卸载残留
+sudo yum remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+
+安装命令：
+yum install -y yum-utils device-mapper-persistent-data lvm2 libseccomp
+yum install -y policycoreutils-python
+
+rpm -ivh docker-ce-cli-18.09.6-3.el7.x86_64.rpm
+rpm -ivh containerd.io-1.2.5-3.1.el7.x86_64.rpm
+rpm -ivh container-selinux-2.9-4.el7.noarch.rpm
+rpm -ivh docker-ce-18.09.6-3.el7.x86_64.rpm                 
+```
+
+2、镜像加速
+
+在 /etc/docker/daemon.json 中写入如下内容（如果文件不存在请新建该文件）**
+
+```
+{
+  "registry-mirrors": [
+    "https://dockerhub.azk8s.cn",
+    "https://reg-mirror.qiniu.com"
+  ]
+}
+
+#注意，一定要保证该文件符合 json 规范，否则 Docker 将不能启动
+```
+
+3、启动服务
+
+```
+systemctl daemon-reload
+systemctl restart docker
+systemctl enable docker
+```
+
+
+
+## 2、docker nexus3安装
+
+https://www.jianshu.com/p/8b927b9cd5c0
+
+#### 1.下载nexus3的镜像
+
+```
+$ docker pull sonatype/nexus3
+```
+
+#### 2.使用镜像启动一个容器
+
+```
+$ docker run -d -p 8081:8081 -p 8082:8082 -p 8083:8083 --name nexus3 --privileged=true -v /home/nexus/nexus-data:/nexus-data --restart=always sonatype/nexus3
+
+docker run -d -t --privileged=true -p 8081:8081 -p 8082:8082 -p 8083:8083 --name nexus3 --privileged=true -v /usr/local/nexus/nexus-data:/nexus-data --restart=always sonatype/nexus3
+
+* 注 没有权限 chmod 777 nexus-data
+```
+
+- 8082端口是用于host镜像仓库的服务端口
+- 8083端口用户group镜像仓库的服务端口
+- 8081 端口是nexus的服务端口
+- --name nexus3
+- -v /home/nexus/nexus-data:/nexus-data 将容器内nexus-data数据文件夹挂载到宿主机/home/nexus/nexus-data目录下
+- sonatype/nexus3 镜像名，如果后面不加版本号，则默认启动latest版本
+
+这里单独说一下 --restart=always：
+意思是不管退出状态码是什么始终重启容器。当指定always时，docker daemon将无限次数地重启容器。容器也会在daemon启动时尝试重启，不管容器当时的状态如何。
+
+- no :容器退出时不要自动重启。这个是默认值。
+- on-failure[:max-retries] : 只在容器以非0状态码退出时重启。可选的，可以退出docker daemon尝试重启容器的次数。
+- always :不管退出状态码是什么始终重启容器。当指定always时，docker daemon将无限次数地重启容器。容器也会在daemon启动时尝试重启，不管容器当时的状态如何。
+- unless-[stopped](https://www.centos.bz/tag/stopped/) :不管退出状态码是什么始终重启容器，不过当daemon启动时，如果容器之前已经为停止状态，不要尝试启动它。
+
+**启动之后我们就可以通过http://服务器IP:8081访问。默认账号密码为admin/admin123**
+
+docker inspect 容器ID 查看详细信息
+
+3.17版本密码改成随即的了，而且登录时候提示密码在/nexus-data/admin.password里
+
+进入容器里面
+
+`docker exec -it 容器id bash`
+
+## 3、安装MySQL示例
+
+```shell
+docker pull mysql
+```
+
+
+
+错误的启动
+
+```shell
+[root@localhost ~]# docker run --name mysql01 -d mysql
+42f09819908bb72dd99ae19e792e0a5d03c48638421fa64cce5f8ba0f40f5846
+
+mysql退出了
+[root@localhost ~]# docker ps -a
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                           PORTS               NAMES
+42f09819908b        mysql               "docker-entrypoint.sh"   34 seconds ago      Exited (1) 33 seconds ago                            mysql01
+538bde63e500        tomcat              "catalina.sh run"        About an hour ago   Exited (143) About an hour ago                       compassionate_
+goldstine
+c4f1ac60b3fc        tomcat              "catalina.sh run"        About an hour ago   Exited (143) About an hour ago                       lonely_fermi
+81ec743a5271        tomcat              "catalina.sh run"        About an hour ago   Exited (143) About an hour ago                       sick_ramanujan
+
+
+//错误日志
+[root@localhost ~]# docker logs 42f09819908b
+error: database is uninitialized and password option is not specified 
+  You need to specify one of MYSQL_ROOT_PASSWORD, MYSQL_ALLOW_EMPTY_PASSWORD and MYSQL_RANDOM_ROOT_PASSWORD；这个三个参数必须指定一个
+```
+
+正确的启动
+
+```shell
+[root@localhost ~]# docker run --name mysql01 -e MYSQL_ROOT_PASSWORD=123456 -d mysql
+b874c56bec49fb43024b3805ab51e9097da779f2f572c22c695305dedd684c5f
+[root@localhost ~]# docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS               NAMES
+b874c56bec49        mysql               "docker-entrypoint.sh"   4 seconds ago       Up 3 seconds        3306/tcp            mysql01
+```
+
+做了端口映射
+
+```shell
+[root@localhost ~]# docker run -p 3306:3306 --name mysql -e MYSQL_ROOT_PASSWORD=123456 -d mysql
+ad10e4bc5c6a0f61cbad43898de71d366117d120e39db651844c0e73863b9434
+[root@localhost ~]# docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
+ad10e4bc5c6a        mysql               "docker-entrypoint.sh"   4 seconds ago       Up 2 seconds        0.0.0.0:3306->3306/tcp   mysql02
+```
+
+几个其他的级操作
+
+```
+docker run --name mysql -v /conf/mysql:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:tag
+把主机的/conf/mysql文件夹挂载到 mysqldocker容器的/etc/mysql/conf.d文件夹里面
+改mysql的配置文件就只需要把mysql配置文件放在自定义的文件夹下（/conf/mysql）
+
+docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:tag --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+指定mysql的一些配置参数
+```
+
+
+
+报错：ERROR 2059 (HY000): Authentication plugin '' cannot be loaded: ÕÒ²»µ½Ö¸¶¨µÄÄ£¿é¡£
+
+```
+解决方案：
+1.进入mysql容器
+docker exec -it mysql bash
+
+2.进入mysql
+mysql -uroot -p
+123456
+
+3.修改密码
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '1qwe32!QWE#@';
+```
+
+## 4、安装 RabbitMq
+
+```
+docker search rabbitMq
+docker pull rabbitmq
+docker images 查看所有镜像
+
+docker run --restart=always -d --hostname my-rabbit --name rabbit -e RABBITMQ_DEFAULT_USER=guest -e RABBITMQ_DEFAULT_PASS=guest -p 15672:15672 -p 5672:5672 -p 25672:25672 -p 61613:61613 -p 1883:1883 rabbitmq
+
+
+docker run  -d --hostname my-rabbit  --name rabbit -e RABBITMQ_DEFAULT_USER=guest -e RABBITMQ_DEFAULT_PASS=guest -p 15672:15672 -p 5672:5672 -p 25672:25672 -p 61613:61613 -p 1883:1883 rabbitmq
+
+docker update --restart=always 容器名字
+
+docker pull rabbitmq:management
+docker run -d --name=rabbitmq -p 5671:5671 -p 5672:5672 -p 4369:4369 -p 15671:15671 -p 15672:15672 -p 25672:25672 rabbitmq:management
+
+
+```
+
+### 问题 启动打不开 网址
+
+```
+查看docker容器名称
+再进入docker rabbitmq 容器中:
+
+docker ps
+docker exec -it 容器名称 sh
+rabbitmq-plugins enable rabbitmq_management
+guest/guest
+exit
+
+https://www.cnblogs.com/yuebo/p/11732769.html
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

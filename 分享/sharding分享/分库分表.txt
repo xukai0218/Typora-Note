@@ -1,0 +1,41 @@
+spring:
+  shardingsphere:
+    #1. 数据源配置
+    datasource:
+      names: master0,master1
+      master0:
+        jdbcUrl: jdbc:mysql://localhost:3306/master0?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      # 多数据源
+      master1:
+        jdbcUrl: jdbc:mysql://localhost:3306/master1?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    # 分库 分表配置
+    sharding:
+      broadcast-tables: base_brand # 配置广播表
+      default-database-strategy: #自定义默认库策略
+        standard:
+          precise-algorithm-class-name: com.example.demo.config.sharding.DefinitionDataSourceAlgorithm
+          sharding-column: store_id # 分片列
+      default-table-strategy: #自定义默认表策略
+        standard:
+          precise-algorithm-class-name: com.example.demo.config.sharding.DefinitionTableAlgorithm
+          sharding-column: store_id
+      tables:
+        order_sale: #逻辑表
+          actual-data-nodes: master$->{0..1}.order_sale_$->{0..1} #真实数据节点 行表达式
+          key-generator: #  id 生成策略  雪花
+            column: id
+            type: snowflake
+        order_sale_item:
+          actual-data-nodes: master$->{0..1}.order_sale_item_$->{0..1}
+          key-generator:
+            column: id
+            type: snowflake
+

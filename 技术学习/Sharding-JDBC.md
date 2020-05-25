@@ -1,10 +1,42 @@
 
 
-## 一、什么是Sharding-JDBC
+# 							Sharding - JDBC
+
+# 依赖
+
+```
+       <!--sharding 配置-->
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
+            <version>4.0.0</version>
+       </dependency>
+-------------------------------------------------------------------------------------       
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
+            <version>4.0.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.shardingsphere</groupId>
+                    <artifactId>sharding-core-route</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.ruigu.rbox.shardingsphere</groupId>
+            <artifactId>sharding-core-route</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+```
+
+
+
+# 一、什么是Sharding-JDBC
 
 Sharding-JDBC定位为轻量级Java框架，在Java的JDBC层提供的额外服务。它使用客户端直连数据库，以jar包形式提供服务，无需额外部署和依赖，可理解为增强版的JDBC驱动，完全兼容JDBC和各种ORM框架。
 
-## 二、Sharding-JDBC能做什么
+# 二、Sharding-JDBC能做什么
 
 - 分库 & 分表
 
@@ -16,7 +48,7 @@ Sharding-JDBC定位为轻量级Java框架，在Java的JDBC层提供的额外服�
 
   
 
-## 三、适用项目框架
+# 三、适用项目框架
 
 Sharding-JDBC适用于：
 
@@ -41,23 +73,9 @@ Sharding-JDBC适用于：
 
 
 
-**1.为什么要分表：**
+## **1.为什么要分表：**
 
 当一张表的数据达到几千万时，你查询一次所花的时间会变多，如果有联合查询的话，我想有可能会死在那儿了。分表的目的就在于此，减小数据库的负担，缩短查询时间。
-
-
-
-
-
-
-
-```
-        <dependency>
-            <groupId>io.shardingsphere</groupId>
-            <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
-            <version>3.1.0.M1</version>
-        </dependency>
-```
 
 
 
@@ -208,7 +226,7 @@ sharding:
 
 
 
-读写分离
+## 读写分离
 
 ```
 
@@ -249,8 +267,6 @@ spring:
 ## 读写分离参考01
 
 ```
-
-#######################################################################################
 ######################### sharding_jdbc读写分离配置 ###################################
 #######################################################################################
 ### 说明：
@@ -261,32 +277,42 @@ spring:
 ###  5、ds0.type=com.alibaba.druid.pool.DruidDataSource 代表的当前使用数据源(我这里是 Druid)
 
 
-server:
-  port: 9999
 spring:
   application:
-    name: sharding-jdbc-read-write
+    name: sharding-jdbc
+  #  datasource:
+  #    url: jdbc:p6spy:mysql://localhost:3306/master0?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+  #    username: root
+  #    password: mysql
+  #    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
   shardingsphere:
     datasource:
-      master:  #master数据库
-        type: com.alibaba.druid.pool.DruidDataSource
-        driverClassName: com.mysql.jdbc.Driver
-        url: jdbc:mysql://localhost:3306/ds_0?useUnicode=true&characterEncoding=utf8&useSSL=false&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+      names: master0,master0slave0,master0slave1
+      master0:
+        jdbcUrl: jdbc:p6spy:mysql://localhost:3306/master0?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
         username: root
-        password: root
-      slave:  #slave数据库
-         type: com.alibaba.druid.pool.DruidDataSource
-         driverClassName: com.mysql.jdbc.Driver
-         url: jdbc:mysql://localhost:3306/ds_1?useUnicode=true&characterEncoding=utf8&useSSL=false&allowMultiQueries=true&serverTimezone=Asia/Shanghai
-         username: root
-         password: root
-      names: master,slave
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+      master0slave0:
+        jdbcUrl: jdbc:p6spy:mysql://localhost:3306/master0slave0?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+      master0slave1:
+        jdbcUrl: jdbc:p6spy:mysql://localhost:3306/master0slave1?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.p6spy.engine.spy.P6SpyDriver
     masterslave:
+      name: ms
+#        round_robin（轮询）和random（随机）。
       load-balance-algorithm-type: round_robin
-      name: dataSource
-      master-data-source-name: master
-      slave-data-source-names: slave
-    props: #显示sql
+      master-data-source-name:  master0
+      slave-data-source-names: master0slave0,master0slave1
+    props:
       sql:
         show: true
 
@@ -303,6 +329,14 @@ spring:
         ds-1:
           master-data-source-name: ds-1
           slave-data-source-names: ds-1-slave
+```
+
+
+
+## 分库+读写分离
+
+```
+
 ```
 
 
@@ -410,9 +444,11 @@ shardingsphere:
 ## 1雪花算法id  精度问题
 
 ```
-
-解决 vo类      @JsonFormat(shape = JsonFormat.Shape.STRING)
-    		  private Long id;	  
+问题: 后端把Long类型的数据传给前端，前端可能会出现精度丢失的情况。例如：201511200001725439这样一个Long类型的整数，传给前端后会变成201511200001725440
+解决 1: vo类   private String id;	  
+	 
+    2:	vo类  @JsonFormat(shape = JsonFormat.Shape.STRING)
+    		  private Long id;	  	  
 ```
 
 ## 2 更新分库键问题
@@ -483,7 +519,7 @@ https://www.cnblogs.com/kenshinobiy/p/9580701.html
 ## 添加分片字段
 
 ```
-需要注意的是，分表后，我们原来的SQL都要Check一遍，看是否带上了分片字段，否则会进行全表扫描，性能比较差。
+    需要注意的是，分表后，我们原来的SQL都要Check一遍，看是否带上了分片字段，否则会进行全表扫描，性能比较差。
 ```
 
 ```

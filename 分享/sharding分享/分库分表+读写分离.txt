@@ -1,0 +1,77 @@
+spring:
+  shardingsphere:
+    datasource:
+      names: master0,master0slave0,master0slave1,master1,master1slave0,master1slave1
+      master0:
+        jdbcUrl: jdbc:mysql://localhost:3306/master0?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      master1:
+        jdbcUrl: jdbc:mysql://localhost:3306/master1?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      master0slave0:
+        jdbcUrl: jdbc:mysql://localhost:3306/master0slave0?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      master0slave1:
+        jdbcUrl: jdbc:mysql://localhost:3306/master0slave1?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      master1slave0:
+        jdbcUrl: jdbc:mysql://localhost:3306/master1slave0?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+      master1slave1:
+        jdbcUrl: jdbc:mysql://localhost:3306/master1slave1?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+        username: root
+        password: mysql
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    sharding: # 配置 主从规则
+      master-slave-rules:
+        master1:
+          master-data-source-name: master1
+          slave-data-source-names: master1slave0, master1slave1
+        master0:
+          master-data-source-name: master0
+          slave-data-source-names: master0slave0, master0slave1
+
+      broadcast-tables: base_brand
+      default-database-strategy:
+        standard:
+          precise-algorithm-class-name: com.example.demo.config.sharding.DefinitionDataSourceAlgorithm
+          sharding-column: store_id
+      default-table-strategy:
+        standard:
+          range-algorithm-class-name: com.example.demo.config.sharding.DefinitionTableRangesAlgorithm
+          precise-algorithm-class-name: com.example.demo.config.sharding.DefinitionTableAlgorithm
+          sharding-column: store_id
+      tables:
+        order_sale:
+          actual-data-nodes: master$->{0..1}.order_sale_$->{0..1}
+          table-strategy:
+            sharding-column: store_id
+            preciseAlgorithmClassName: com.example.demo.config.sharding.DefinitionDataSourceAlgorithm
+            rangeAlgorithmClassName: com.example.demo.config.sharding.DefinitionTableRangesAlgorithm
+          key-generator:
+            column: id
+            type: snowflake
+        order_sale_item:
+          actual-data-nodes: master$->{0..1}.order_sale_item_$->{0..1}
+          key-generator:
+            column: id
+            type: snowflake
+
+
+

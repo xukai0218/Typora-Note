@@ -31,3 +31,8 @@
 List<Long> categoryIds = req.getPromotionProducts().stream().map(CreatePromotionReq.PromotionProduct::getCategoryId).collect(Collectors.toList());
 ```
 
+to map
+
+```
+ Map<String, BaseScenarioVO> voMap = data.stream().collect(Collectors.toMap(BaseScenarioVO::getImage, BaseScenarioVO::get));
+```
