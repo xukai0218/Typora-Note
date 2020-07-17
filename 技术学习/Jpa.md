@@ -304,15 +304,15 @@ none
         };
 ```
 
-# 自动生成实体类
+# 自动生成实体类01
 
 Generate_POJOs.groovy  schemas->选表 ->右键 scripted
 
 set global time_zone='+8:00';
 
-```
 Generate_POJOs.groovy
 
+```
 import com.intellij.database.model.DasTable
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.util.Case
@@ -320,6 +320,7 @@ import com.intellij.database.util.DasUtil
 
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
+import java.math.BigDecimal
 
 /*
  * Available context bindings:
@@ -329,16 +330,16 @@ import java.time.LocalDateTime
  */
 packageName = ""
 typeMapping = [
-        (~/bigint/)                       : "Long",
-        (~/(?i)int/)                      : "Integer",
-        (~/(?i)float|double|real/)       :  "Double",
-        (~/decimal/)                        : "BigDecimal",
-        (~/(?i)bool|boolean/)             : "Boolean",
-        (~/datetime|timestamp/)           : "LocalDateTime",
-        (~/date/)                         : "LocalDate",
-        (~/(?i)time/)                     : "LocalDateTime",
-        (~/(?i)char|text/)                : "String",
-        (~/(?i)/)                         : "String"
+        (~/bigint/)               : "Long",
+        (~/(?i)int/)              : "Integer",
+        (~/(?i)float|double|real/): "Double",
+        (~/decimal/)              : "BigDecimal",
+        (~/(?i)bool|boolean/)     : "Boolean",
+        (~/datetime|timestamp/)   : "LocalDateTime",
+        (~/date/)                 : "LocalDate",
+        (~/(?i)time/)             : "LocalDateTime",
+        (~/(?i)char|text/)        : "String",
+        (~/(?i)/)                 : "String"
 ]
 
 FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
@@ -363,21 +364,17 @@ def generate(out, table, className, fields) {
     out.println "import javax.persistence.*;"
     out.println "import java.io.Serializable;"
     out.println "import java.time.LocalDateTime;"
+    out.println ""
     out.println "/**"
-    out.println " * "
     out.println " * @author xukai"
     out.println " * @date $nowTime"
     out.println " */"
     out.println "@Data"
     out.println "@Entity"
     out.println "@Table(name = \"$tableName\")"
-    out.println "public class $className"+"Entity implements Serializable {"
+    out.println "public class $className" + "Entity implements Serializable {"
     out.println ""
-    // 判断自增
-    if ((tableName + "_id").equalsIgnoreCase(fields[0].colum) || "id".equalsIgnoreCase(fields[0].colum)) {
-        out.println "\t@Id"
-        out.println "\t@GeneratedValue(strategy=GenerationType.IDENTITY)"
-    }
+    int i = 0
     fields.each() {
         if (it.annos != "") out.println "  ${it.annos}"
         // 输出注释
@@ -386,7 +383,15 @@ def generate(out, table, className, fields) {
             out.println "\t * ${it.comment}"
             out.println "\t */"
         }
-        out.println "\t@Column(name = \"${it.colum}\" ,columnDefinition= \"${it.sqlType}\" )"
+        if (i == 0) {
+            // 判断自增
+            if ((tableName + "_id").equalsIgnoreCase(fields[0].colum) || "id".equalsIgnoreCase(fields[0].colum)) {
+                out.println "\t@Id"
+                out.println "\t@GeneratedValue(strategy = GenerationType.IDENTITY)"
+            }
+        }
+        i++
+        out.println "    @Column(name = \"${it.colum}\", columnDefinition = \"${it.sqlType}\")"
         String colName = it.name
         if (colName.startsWith("is")) {
             it.name = colName.substring(2).toLowerCase()
@@ -402,14 +407,14 @@ def calcFields(table) {
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
         def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
         String sqlTypeStr = spec;
-        if (sqlTypeStr!=null&&!sqlTypeStr.isEmpty()&&sqlTypeStr.contains("(")){
+        if (sqlTypeStr != null && !sqlTypeStr.isEmpty() && sqlTypeStr.contains("(")) {
             sqlTypeStr = sqlTypeStr.substring(0, sqlTypeStr.indexOf("("));
         }
         fields += [[
                            name   : javaName(col.getName(), false),
                            colum  : col.getName(),
                            type   : typeStr,
-                           sqlType   : sqlTypeStr,
+                           sqlType: sqlTypeStr,
                            comment: col.getComment(),
                            annos  : ""]]
     }
@@ -435,13 +440,348 @@ def isNotEmpty(content) {
     return content != null && content.toString().trim().length() > 0
 }
 
+```
 
+
+
+# 多数据源配置
+
+
+
+## 回滚失效
+
+````
+@Transactional( value = "platformTransactionManagerRboxPayment",rollbackFor = Exception.class)
+````
+
+
+
+## pom 文件
+
+```
+  <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba</groupId>-->
+        <!--            <artifactId>druid-spring-boot-starter</artifactId>-->
+        <!--            <version>1.1.10</version>-->
+        <!--        </dependency>-->
+        <!--jpa-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!--mysql-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!--lombok-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!--queryDsl-->
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.querydsl</groupId>
+            <artifactId>querydsl-apt</artifactId>
+        </dependency>
+        
+        
+        
+        
+         <!--该插件可以生成querysdl需要的查询对象，执行mvn compile即可-->
+            <plugin>
+                <groupId>com.mysema.maven</groupId>
+                <artifactId>apt-maven-plugin</artifactId>
+                <version>1.1.3</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/generated-sources/java</outputDirectory>
+                            <processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
+                            <options>
+                                <querydsl.entityAccessors>true</querydsl.entityAccessors>
+                                <querydsl.createDefaultVariable>true</querydsl.createDefaultVariable>
+                                <querydsl.packageSuffix>.qdsl</querydsl.packageSuffix>
+                            </options>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+```
+
+
+
+## yaml 文件
+
+```
+spring:
+  datasource:
+    one:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://192.168.1.68:3306/skoyi_store?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+      username: ruigu
+      password: Y3HIcmKeryJ6yjhPKSnV
+      type: com.alibaba.druid.pool.DruidDataSource
+    two:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://192.168.1.68:3306/obm_base?tinyInt1isBit=true&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+      username: ruigu
+      password: Y3HIcmKeryJ6yjhPKSnV
+      type: com.alibaba.druid.pool.DruidDataSource
+
+  jpa:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: validate
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+    show-sql: true
+```
+
+
+​		
+
+
+
+## config
+
+### DataSourceConfig
+
+```
+package com.datasource.demo.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+
+/**
+ * @author xukai
+ * @create 2020-07-10 11:07
+ */
+@Configuration
+public class DataSourceConfig {
+
+//    DruidData 数据源
+//    @Bean("dsOne")
+//    @ConfigurationProperties(prefix = "spring.datasource.one")
+//    @Primary
+//    DataSource dsOne() {
+//        return DruidDataSourceBuilder.create().build();
+//    }
+//
+//    @Bean("dsTwo")
+//    @ConfigurationProperties(prefix = "spring.datasource.two")
+//    DataSource dsTwo() {
+//        return DruidDataSourceBuilder.create().build();
+//    }
+
+
+    @Primary
+    @Bean(name = "dsOne")
+    @ConfigurationProperties(prefix = "spring.datasource.one")
+    public DataSource dsOne() {
+        return DataSourceBuilder.create().build();
+    }
+
+    @Bean("dsTwo")
+    @ConfigurationProperties(prefix = "spring.datasource.two")
+    public DataSource rboxPaymentDataSource() {
+        return DataSourceBuilder.create().build();
+    }
+}
+
+```
+
+### JpaOneConfig
+
+```
+package com.datasource.demo.config;
+
+/**
+ * @author xukai
+ * @create 2020-07-10 11:11
+ */
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
+import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.persistence.EntityManager;
+import javax.sql.DataSource;
+
+@Configuration
+@EnableTransactionManagement
+@EnableJpaRepositories(basePackages = "com.datasource.demo.repository.one",
+        entityManagerFactoryRef = "localContainerEntityManagerFactoryBeanOne",
+        transactionManagerRef = "platformTransactionManagerOne")
+public class JpaOneConfig {
+
+    @Autowired
+    @Qualifier(value = "dsOne")
+    DataSource dsOne;
+
+    @Autowired
+    JpaProperties jr;
+
+    @Bean
+    @Primary
+    LocalContainerEntityManagerFactoryBean localContainerEntityManagerFactoryBeanOne(EntityManagerFactoryBuilder builder) {
+        return builder.dataSource(dsOne)
+                .properties(jr.getProperties())
+                //设置实体类所在位置
+                .packages("com.datasource.demo.entity.one")
+                .persistenceUnit("pu1")
+                .build();
+
+    }
+
+    @Bean(name = "one")
+    @Primary
+    public EntityManager entityManager(EntityManagerFactoryBuilder builder) {
+        return localContainerEntityManagerFactoryBeanOne(builder).getObject().createEntityManager();
+    }
+
+    @Bean
+    @Primary
+    PlatformTransactionManager platformTransactionManagerOne(EntityManagerFactoryBuilder builder) {
+        LocalContainerEntityManagerFactoryBean localContainerEntityManagerFactoryBean = localContainerEntityManagerFactoryBeanOne(builder);
+        return new JpaTransactionManager(localContainerEntityManagerFactoryBean.getObject());
+    }
+}
 
 ```
 
 
 
+### JpaTwoConfig
+
+````
+package com.datasource.demo.config;
+
+/**
+ * @author xukai
+ * @create 2020-07-10 11:11
+ */
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
+import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.persistence.EntityManager;
+import javax.sql.DataSource;
+
+@Configuration
+@EnableTransactionManagement
+@EnableJpaRepositories(basePackages = "com.datasource.demo.repository.two",
+        entityManagerFactoryRef = "localContainerEntityManagerFactoryBeanTwo",
+        transactionManagerRef = "platformTransactionManagerTwo")
+public class JpaTwoConfig {
+
+    @Autowired
+    @Qualifier(value = "dsTwo")
+    DataSource dsTwo;
+
+    @Autowired
+    JpaProperties jr;
+
+    @Bean
+    LocalContainerEntityManagerFactoryBean localContainerEntityManagerFactoryBeanTwo(EntityManagerFactoryBuilder builder) {
+        return builder.dataSource(dsTwo)
+                .properties(jr.getProperties())
+                //设置实体类所在位置
+                .packages("com.datasource.demo.entity.two")
+                .persistenceUnit("pu2")
+                .build();
+
+    }
+
+    @Bean(name = "two")
+    public EntityManager entityManager(EntityManagerFactoryBuilder builder) {
+        return localContainerEntityManagerFactoryBeanTwo(builder).getObject().createEntityManager();
+    }
+
+    @Bean
+    PlatformTransactionManager platformTransactionManagerTwo(EntityManagerFactoryBuilder builder) {
+        LocalContainerEntityManagerFactoryBean localContainerEntityManagerFactoryBean = localContainerEntityManagerFactoryBeanTwo(builder);
+        return new JpaTransactionManager(localContainerEntityManagerFactoryBean.getObject());
+    }
+}
+
+````
 
 
 
-​				
+### JpaQueryFactory
+
+```
+package com.datasource.demo.config;
+
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import javax.persistence.EntityManager;
+
+/**
+ * @author xukai
+ * @create 2020-04-10 15:03
+ */
+@Configuration
+public class JpaQueryFactory {
+    @Bean({"oneFactory"})
+    public JPAQueryFactory jpaQueryFactoryOne(@Qualifier("one") EntityManager entityManager) {
+        return new JPAQueryFactory(entityManager);
+    }
+
+
+    @Bean({"twoFactory"})
+    public JPAQueryFactory jpaQueryFactoryTwo(@Qualifier("two") EntityManager entityManager) {
+        return new JPAQueryFactory(entityManager);
+    }
+}
+
+```
+
+
+
+## 结构
+
+<img src="E:\Users\kai.xu\Desktop\My\Typora-Note\image\Jpa多数据源.png" alt="image-20200710154540306" style="zoom:200%;" />

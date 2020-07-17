@@ -44,20 +44,20 @@
 @PropertySource(Value={"classpath:/person.properties"}) 读取外部配置文件中的K/V保存到运行的环境中
 
 	AnnotationConfigApplicationContext applicationContext = new  AnnotationConfigApplicationContext("") 		
-
+	
 		applicationContext.getEnvironment().getProperty("person.neckName");
 
 ​		
 @Autowired 自动装配 自动注入:
-		1) 默认优先按照类型去容器中找对应的组件:applicationContext.getBean(BookDao.class);
-		2) 如果有多个相同类型的组件,则根据属性的名称作为组件的id去容器查找
-									applicationContext.getBean(bookDao);
-		3) @Qualifier("bookDao") 指定需要装配的组件id,而不是使用属性名
-		4) 自动装配默认一定要将属性赋值好,没有就会报错;
-			Autowired(required=false);
-		5) @Primary 让Spring进行自动装配的时候 默认使用首选的bean
-					也可以继续使用@Qualifier 指定需要装配的bean的 名字
-					
+​		1) 默认优先按照类型去容器中找对应的组件:applicationContext.getBean(BookDao.class);
+​		2) 如果有多个相同类型的组件,则根据属性的名称作为组件的id去容器查找
+​									applicationContext.getBean(bookDao);
+​		3) @Qualifier("bookDao") 指定需要装配的组件id,而不是使用属性名
+​		4) 自动装配默认一定要将属性赋值好,没有就会报错;
+​			Autowired(required=false);
+​		5) @Primary 让Spring进行自动装配的时候 默认使用首选的bean
+​					也可以继续使用@Qualifier 指定需要装配的bean的 名字
+​					
 					BookService{
 						Autowired
 						BookDao bookDaol
@@ -70,12 +70,17 @@
 		@inject:
 			需要导入javax.inject的包,和Autowired功能一样 没有 required=false功能
 
+​		
+​		
+​		
+​		
 
-​		
-​		
-​		
-​		
-​		
+# 	IOC	
+
+控制反转
+
+核心: 通过反射创建对象 操作对象
+
 ​		
 ​		
 ​		

@@ -1,3 +1,7 @@
+
+
+https://cloud.tencent.com/developer/article/1187833
+
 分组
 
 ```
@@ -35,4 +39,38 @@ to map
 
 ```
  Map<String, BaseScenarioVO> voMap = data.stream().collect(Collectors.toMap(BaseScenarioVO::getImage, BaseScenarioVO::get));
+ 
+     public BaseScenarioVO get() {
+        return this;
+    }
+  Map<String, BaseScenarioVO> voMap = data.stream().collect(Collectors.toMap(BaseScenarioVO::getImage, BaseScenarioVO ->BaseScenarioVO));
 ```
+
+去重
+
+```
+    /**
+     * 去重
+     *
+     * @param list fb数据
+     * @return 不重复的流水号
+     */
+    private List<String> distinctFb(List<ClearingStatisticsDetailDTO> list) {
+        return list.stream()
+                .collect(Collectors.toMap(e -> e.getTransactionSerialNumber(), e -> 1, (a, b) -> a + b))
+                .entrySet().stream()
+                .filter(entry -> entry.getValue() == 1)
+                .map(entry -> entry.getKey())
+                .collect(Collectors.toList());
+    }
+    
+             // 排出 重复的订单 并收集
+            details.removeIf(order -> {
+                if (!unSeriaNums.contains(order.getTransactionSerialNumber())) {
+                    fbRepetitionOrder.add(order);
+                    return true;
+                }
+                return false;
+            });   
+```
+

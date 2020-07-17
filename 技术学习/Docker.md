@@ -50,12 +50,22 @@ docker容器(Container)：镜像启动后的实例称为一个容器；容器是
 
 ##   1）镜像操作
 
-| 操作   | 命令                                       | 说明                                  |
-| ---- | ---------------------------------------- | ----------------------------------- |
-| 检索   | docker  search 关键字  eg：docker  search redis | 我们经常去docker  hub上检索镜像的详细信息，如镜像的TAG。 |
-| 拉取   | docker pull 镜像名:tag                      | :tag是可选的，tag表示标签，多为软件的版本，默认是latest  |
-| 列表   | docker images                            | 查看所有本地镜像                            |
-| 删除   | docker rmi image-id                      | 删除指定的本地镜像                           |
+| 操作 | 命令                                            | 说明                                                     |
+| ---- | ----------------------------------------------- | -------------------------------------------------------- |
+| 检索 | docker  search 关键字  eg：docker  search redis | 我们经常去docker  hub上检索镜像的详细信息，如镜像的TAG。 |
+| 拉取 | docker pull 镜像名:tag                          | :tag是可选的，tag表示标签，多为软件的版本，默认是latest  |
+| 列表 | docker images                                   | 查看所有本地镜像                                         |
+| 删除 | docker rmi image-id                             | 删除指定的本地镜像                                       |
+| 日志 | docker logs -f 50f40bb240be(id/name)            | 查看容器日志                                             |
+
+````
+redis.log(redis.LOG_DEBUG, 1)
+redis.log(redis.LOG_VERBOSE, 2)
+redis.log(redis.LOG_NOTICE, 3)
+redis.log(redis.LOG_WARNING, 4)
+````
+
+
 
 https://hub.docker.com/
 
