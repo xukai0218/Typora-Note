@@ -55,6 +55,20 @@ public class JpaAutoConfiguration {
 
 # 常用方法
 
+## 转换时间
+
+```
+private StringTemplate dateExpr = Expressions.stringTemplate("DATE_FORMAT({0},'%Y-%m')", qNphSaleOrderEntity.createdAt);
+```
+
+## castToNum 转换类型
+
+```
+                     qEvaluationEntity.express.avg().castToNum(BigDecimal.class).as(ShopEvaluationVO.Fields.express)
+```
+
+
+
 ## 时间
 
 ```

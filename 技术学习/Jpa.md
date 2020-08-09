@@ -364,6 +364,7 @@ def generate(out, table, className, fields) {
     out.println "import javax.persistence.*;"
     out.println "import java.io.Serializable;"
     out.println "import java.time.LocalDateTime;"
+    out.println "import java.math.BigDecimal;"
     out.println ""
     out.println "/**"
     out.println " * @author xukai"

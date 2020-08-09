@@ -152,6 +152,94 @@ public class RedisConfig implements Serializable {
 
 
 
+```
+package com.ruigu.skoyi.store.config;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ruigu.skoyi.store.cache.CustomizedRedisCacheManager;
+import com.ruigu.skoyi.store.constant.Constants;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import java.io.Serializable;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author xukai
+ * @create 2020-03-26 22:18
+ */
+@Configuration
+@EnableCaching
+public class RedisConfig implements Serializable {
+
+    @Bean
+    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        RedisCacheConfiguration cacheConfiguration = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofSeconds(60 * 60))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(createJackson2JsonRedisSerializer(objectMapper)));
+        // 引入自定义CacheManager
+        return new CustomizedRedisCacheManager(redisConnectionFactory, cacheConfiguration, getRedisCacheConfigurationMap());
+    }
+
+    private RedisSerializer<Object> createJackson2JsonRedisSerializer(ObjectMapper objectMapper) {
+        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<Object>(Object.class);
+        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        serializer.setObjectMapper(objectMapper);
+        return serializer;
+    }
+
+    /**
+     * 自定义指定 key 设置过期时间
+     */
+    private Map<String, RedisCacheConfiguration> getRedisCacheConfigurationMap() {
+        Map<String, RedisCacheConfiguration> redisCacheConfigurationMap = new HashMap<>();
+        redisCacheConfigurationMap.put(Constants.REDIS_SA_CACHE_KEY, this.getRedisCacheConfigurationWithTtl(Constants.REDIS_CACHE_EXPIRE_TIME));
+        redisCacheConfigurationMap.put(Constants.REDIS_PROMOTION_CACHE_KEY, this.getRedisCacheConfigurationWithTtl(Constants.REDIS_PROMOTION_CACHE_TIME));
+        redisCacheConfigurationMap.put(Constants.REDIS_MODULE_CACHE_KEY, this.getRedisCacheConfigurationWithTtl(Constants.REDIS_MODULE_CACHE_TIME));
+        redisCacheConfigurationMap.put(Constants.REDIS_PRODUCT_CACHE_KEY, this.getRedisCacheConfigurationWithTtl(Constants.REDIS_CACHE_EXPIRE_TIME));
+        redisCacheConfigurationMap.put(Constants.REDIS_SCENARIO_CACHE_KEY, this.getRedisCacheConfigurationWithTtl(Constants.REDIS_CACHE_EXPIRE_TIME));
+        redisCacheConfigurationMap.put(Constants.REDIS_PRODUCT_CATEGORY_CACHE_KEY, this.getRedisCacheConfigurationWithTtl(Constants.REDIS_CACHE_EXPIRE_TIME));
+        redisCacheConfigurationMap.put(Constants.REDIS_PRODUCT_BRAND_CATEGORY_CACHE_KEY, this.getRedisCacheConfigurationWithTtl(Constants.REDIS_CACHE_EXPIRE_TIME));
+        redisCacheConfigurationMap.put(Constants.REDIS_PRODUCT_BRAND_CACHE_KEY, this.getRedisCacheConfigurationWithTtl(Constants.REDIS_CACHE_EXPIRE_TIME));
+        redisCacheConfigurationMap.put(Constants.REDIS_RECOMMEND_PRODUCT_CACHE_KEY, this.getRedisCacheConfigurationWithTtl(Constants.REDIS_CACHE_EXPIRE_TIME));
+        redisCacheConfigurationMap.put(Constants.REDIS_STORE_NOTIFY_MESSAGE_CACHE_KEY, this.getRedisCacheConfigurationWithTtl(Constants.REDIS_CACHE_EXPIRE_TIME));
+        return redisCacheConfigurationMap;
+    }
+
+    private RedisCacheConfiguration getRedisCacheConfigurationWithTtl(Integer seconds) {
+        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
+        ObjectMapper om = new ObjectMapper();
+        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        jackson2JsonRedisSerializer.setObjectMapper(om);
+        RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig();
+        redisCacheConfiguration = redisCacheConfiguration.serializeValuesWith(
+                RedisSerializationContext
+                        .SerializationPair
+                        .fromSerializer(jackson2JsonRedisSerializer)
+        ).entryTtl(Duration.ofSeconds(seconds));
+
+        return redisCacheConfiguration;
+    }
+}
+
+```
+
 
 
 ### CustomizedRedisCache.java

@@ -74,3 +74,16 @@ to map
             });   
 ```
 
+Integer -> String
+
+```
+List<String> stringList = intList.stream().map(String::valueOf).collect(Collectors.toList());
+```
+
+
+
+```
+Map<String, List<String>> collect = detail.stream().collect(Collectors.groupingBy(WarehouseDetailVO::getSkuCode,
+                    Collectors.mapping(WarehouseDetailVO::getWarehouseName, Collectors.toList())));
+```
+

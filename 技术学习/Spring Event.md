@@ -97,3 +97,28 @@ Java的设计模式中有两种设计模式，观察者模式和监听者模式
  
 
 常规的使用事件需要有三个步骤：定义事件源，监听事件，发布事件
+
+
+
+
+
+
+
+# **事务监听器（@TransactionalEventListener）**
+
+- 如果A方法需要B方法执行完成之后的数据，但是A和B又不在同一个事务中，B中的事务没有提交，A就获取不到数据，此时我们需要等待B提交事务之后执行的A方法才能成功获取数据。
+
+- @TransactionalEventListener默认监听的事件默认是在事务提交之后，即是在一个事务中发布了一个事件，只有等事务成功提交之后才能监听到。
+
+- @TransactionalEventListener的重要属性如下：
+
+- - `phase`：指定事务的处理阶段，在`TransactionPhase`中定义了事务的四个阶段，默认的是事务成功提交之后
+
+  - - `BEFORE_COMMIT`：事务提交之前，事务执行有异常失效
+    - `AFTER_COMMIT`：事务成功提交之后，事务执行有异常失效
+    - `AFTER_ROLLBACK`：事务回滚之后
+    - `AFTER_COMPLETION`：事务完成之后，无论是否有异常都会执行
+
+
+
+- - `fallbackExecution`：没有事务的时候是否应该执行，默认为false，即是必须是有事务的时候才会执行
