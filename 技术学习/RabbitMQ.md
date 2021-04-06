@@ -2,6 +2,18 @@
 
 
 
+```
+   		<!--mq-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+```
+
+
+
+
+
 ### RabbitMQ是一个开源的消息代理和队列服务器 基于AMQP协议
 
 好处:  开源 性能优秀 稳定性保障

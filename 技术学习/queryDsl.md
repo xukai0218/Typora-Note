@@ -58,7 +58,19 @@ public class JpaAutoConfiguration {
 ## 转换时间
 
 ```
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDateTime time = LocalDateTime.now();
+        String localTime = df.format(time);
+        
+                LocalDate now = LocalDate.now();
+        LocalDateTime startTime = now.with(TemporalAdjusters.firstDayOfMonth()).atTime(LocalTime.MIN);
+        LocalDateTime endTime = now.atTime(LocalTime.MAX);
+        
+
 private StringTemplate dateExpr = Expressions.stringTemplate("DATE_FORMAT({0},'%Y-%m')", qNphSaleOrderEntity.createdAt);
+
+//两个时间间隔几个月
+        long monthCount = ChronoUnit.MONTHS.between(date, endTime);
 ```
 
 ## castToNum 转换类型
