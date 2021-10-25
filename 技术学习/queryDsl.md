@@ -71,6 +71,7 @@ private StringTemplate dateExpr = Expressions.stringTemplate("DATE_FORMAT({0},'%
 
 //两个时间间隔几个月
         long monthCount = ChronoUnit.MONTHS.between(date, endTime);
+        long dayCount = ChronoUnit.DAYS.between(startTime, endTime);
 ```
 
 ## castToNum 转换类型

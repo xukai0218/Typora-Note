@@ -1,4 +1,4 @@
-# RabbitMQ
+# xRabbitMQ
 
 
 
@@ -355,84 +355,114 @@ Exchange,所以不需要将 Exchange进行任何绑定( binding)操作,消息传
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ![image-20200404131748315](E:\Users\kai.xu\Desktop\My\Typora-Note\image\RabbitMQ\image-20200404131748315.png)
 
 
 
+# 代码使用
+
+配置
+
+```
+spring: 
+  rabbitmq:
+    #    host: 192.168.1.107
+    host: 192.168.2.10
+    listener:
+      simple:
+        acknowledge-mode: manual
+      type: simple
+    password: guest
+    port: 5672
+    publisher-confirm-type: correlated
+    requested-heartbeat: 5
+    username: guest
+    virtual-host: /skoyi
+```
+
+
+
+```
+    @Data
+    @Configuration
+    @ConfigurationProperties(prefix = "skoyi.store.rabbit.order.cancel")
+    public static class OrderCancelProperties {
+        private String routing;
+        private String queue;
+        private String dlxRouting;
+        private String dlxQueue;
+    }
+    
+```
+
+```
+    @Bean
+    public RabbitTemplate rabbitmqTemplate(ConnectionFactory connectionFactory) {
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setConfirmCallback(notifyConfirmCallback);
+        return rabbitTemplate;
+    }
+```
+
+
+
+```
+package com.ruigu.skoyi.store.manager.message;
+
+import com.ruigu.skoyi.store.model.enums.MsgStatusEnum;
+import com.ruigu.skoyi.store.repository.StoreMessageLogRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.Objects;
+
+/**
+ * 消息confirm
+ *
+ */
+@Component
+@Slf4j
+public class NotifyConfirmCallback implements RabbitTemplate.ConfirmCallback {
+
+    /**
+     * 默认等3次
+     */
+    private static final int WAIT_TIME = 3;
+
+
+    @Autowired
+    private StoreMessageLogRepository logRepository;
+
+
+    @Override
+    public void confirm(CorrelationData correlationData, boolean ack, String cause) {
+        long msgId = Long.parseLong(Objects.requireNonNull(correlationData.getId()));
+        if (ack) {
+            log.info("消息:{},发送成功", msgId);
+            int count = 0;
+            try {
+                while (count < WAIT_TIME) {
+                    int row = logRepository.updateMsgLogStatus(msgId, MsgStatusEnum.SEND_SUCCESS.getCode());
+                    if (row > 0) {
+                        return;
+                    }
+                    count++;
+                    Thread.sleep(500);
+                }
+            } catch (Exception e) {
+
+            }
+        } else {
+            log.error("消息:{},发送失败,原因:{}", correlationData.toString(), cause);
+            logRepository.updateMsgLogStatus(msgId, MsgStatusEnum.SEND_FAILURE.getCode());
+        }
+    }
+}
+```
 
 
 
@@ -440,6 +470,48 @@ Exchange,所以不需要将 Exchange进行任何绑定( binding)操作,消息传
 
 
 
+```
+    @Bean
+    public TopicExchange exchange() {
+        return new TopicExchange(storeProperties.getRabbit().getExchange());
+    }
+   ------------------------------------------------------------------------------- 
+        @Bean
+    public Queue orderCancelQueue() {
+        Map<String, Object> arguments = new HashMap<>();
+        arguments.put("x-dead-letter-exchange", storeProperties.getRabbit().getExchange());
+        arguments.put("x-dead-letter-routing-key", orderCancelProp.getDlxRouting());
+        return new Queue(orderCancelProp.getQueue(), true, false, false, arguments);
+    }
+
+    @Bean
+    public Queue orderCancelDxlQueue() {
+        return new Queue(orderCancelProp.getDlxQueue());
+    }
+       ------------------------------------------------------------------------------- 
+
+        @Bean
+    public Binding orderCancelDlxBinding() {
+        return BindingBuilder.bind(orderCancelDxlQueue()).to(exchange()).with(orderCancelProp.getDlxRouting());
+    }
+
+    @Bean
+    public Binding orderCancelBinding() {
+        return BindingBuilder.bind(orderCancelQueue()).to(exchange()).with(orderCancelProp.getRouting());
+    }
+```
+
+注解
+
+```
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    exchange = @Exchange(value = "${skoyi.store.rabbit.exchange}", type = ExchangeTypes.TOPIC),
+                    value = @Queue(value = "${skoyi.store.rabbit.yee-pay.queue}"),
+                    key = "${skoyi.store.rabbit.yee-pay.routing}"
+            )
+    )
+```
 
 
 
@@ -447,11 +519,59 @@ Exchange,所以不需要将 Exchange进行任何绑定( binding)操作,消息传
 
 
 
+![image-20210801124332452](../image/RabbitMQ/image-20210801124332452.png)
 
 
 
 
 
+![image-20210801124413222](../image/RabbitMQ/image-20210801124413222.png)
+
+
+
+![image-20210801125147598](../image/RabbitMQ/image-20210801125147598.png)
+
+
+
+
+
+```
+1、 消息队列的作用与使用场景？
+要点：关键词+应用场景
+2、 Channel 和 vhost 的作用是什么？
+Channel：减少 TCP 资源的消耗。也是最重要的编程接口。
+Vhost：提高硬件资源利用率，实现资源隔离。
+3、 RabbitMQ 的消息有哪些路由方式？适合在什么业务场景使用？
+Direct、Topic、Fanout
+4、 交换机与队列、队列与消费者的绑定关系是什么样的？
+多个消费者监听一个队列时（比如一个服务部署多个实例），消息会重复消
+费吗？
+多对多；
+轮询（平均分发）
+5、 无法被路由的消息，去了哪里？
+直接丢弃。可用备份交换机（alternate-exchange）接收。
+6、 消息在什么时候会变成 Dead Letter（死信）？
+消息过期；消息超过队列长度或容量；消息被拒绝并且未设置重回队列
+7、 如果一个项目要从多个服务器接收消息，怎么做？
+如果一个项目要发送消息到多个服务器，怎么做？
+定义多个 ConnectionFactory，注入到消费者监听类/Temaplate。
+8、 RabbitMQ 如何实现延迟队列？
+基于数据库+定时任务；
+或者消息过期+死信队列；
+或者延迟队列插件。
+
+哪些情况会导致消息丢失？怎么解决？
+
+16、 如何保证消息的顺序性？
+一个队列只有一个消费者
+17、 RabbitMQ 的集群节点类型？
+磁盘节点和内存节点
+
+动态增加消费者
+SimpleMessagelistener container
+18、 如何保证 RabbitMQ 的高可用？
+HAProxy（LVS）+Keepalived
+```
 
 
 

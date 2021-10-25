@@ -1,11 +1,23 @@
 
 
+# 一.stream
+
 https://cloud.tencent.com/developer/article/1187833
 
 分组
 
 ```
   Map<Long, Map<Long, List<OrderSaleEntity>>> map = finishOrderDaily.stream().collect(Collectors.groupingBy(OrderSaleEntity::getStoreId, Collectors.groupingBy(OrderSaleEntity::getCustomerId)));
+```
+
+```
+Map<String, List<String>> collect = detail.stream().collect(Collectors.groupingBy(WarehouseDetailVO::getSkuCode,
+                    Collectors.mapping(WarehouseDetailVO::getWarehouseName, Collectors.toList())));
+```
+
+```
+        Map<String, List<YeePayIndustryCategoryDTO>> listMap = dto.stream().collect(Collectors.groupingBy(YeePayIndustryCategoryDTO::getPrimaryCategory,
+                Collectors.mapping(Function.identity(), Collectors.toList())));
 ```
 
 
@@ -130,7 +142,16 @@ list->list
 
 
 
-时间操作
+```
+     Integer totalQuantity = itemEntities.stream().mapToInt(StoreAfterSaleOrderItemEntity::getQuantity).sum();
+
+        BigDecimal totalAmount = itemEntities.stream().map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, BigDecimal.ROUND_HALF_UP);
+```
+
+
+
+# 二.时间操作
 
 ```
     /**
@@ -203,3 +224,47 @@ list->list
     }
 ```
 
+# 三.@FunctionalInterface
+
+https://www.runoob.com/java/java8-functional-interfaces.html
+
+https://blog.51cto.com/sihai/2425915
+
+# 简介
+
+java 8引入了lambda表达式，lambda表达式实际上表示的就是一个匿名的function。
+
+在java 8之前，如果需要使用到匿名function需要new一个类的实现，但是有了lambda表达式之后，一切都变的非常简介。
+
+我们看一个之前讲线程池的时候的一个例子：
+
+```
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        executorService.submit(new Runnable() {
+            @Override
+            public void run() {
+            log.info("new runnable");
+            }
+        });
+```
+
+executorService.submit需要接收一个Runnable类，上面的例子中我们new了一个Runnable类，并实现了它的run（）方法。
+
+上面的例子如果用lambda表达式来重写，则如下所示：
+
+```
+executorService.submit(()->log.info("new runnable"));
+```
+
+看起是不是很简单，使用lambda表达式就可以省略匿名类的构造，并且可读性更强。
+
+那么是不是所有的匿名类都可以用lambda表达式来重构呢？也不是。
+
+我们看下Runnable类有什么特点：
+
+```java
+@FunctionalInterface
+public interface Runnable 
+```
+
+Runnable类上面有一个@FunctionalInterface注解。

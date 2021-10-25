@@ -121,6 +121,9 @@ DML (Data Manipulation Language)
 原子性( Atomicity)
 
 > 原子性是指事务包含的所有操作要么全部成功，要么全部失败回滚，这和前面两篇博客介绍事务的功能是一样的概念，因此事务的操作如果成功就必须要完全应用到数据库，如果操作失败则不能对数据库有任何影响。
+>
+> 原子性，在 InnoDB 里面是通过 undo log 来实现的，它记录了数据修改之前的值（逻
+> 辑日志），一旦发生异常，就可以用 undo log 来实现回滚操作。
 
 一致性( consistency)
 
@@ -143,6 +146,16 @@ DML (Data Manipulation Language)
 > 　　例如我们在使用JDBC操作数据库时，在提交事务方法后，提示用户事务操作完成，当我们程序执行完成直到看到提示后，就可以认定事务以及正确提交，即使这时候数据库出现了问题，也必须要将我们的事务完全执行完成，否则就会造成我们看到提示事务处理完毕，但是数据库因为故障而没有执行事务的重大错误。
 >
 > 以上介绍完事务的四大特性(简称ACID)，现在重点来说明下事务的隔离性，当多个线程都开启事务操作数据库中的数据时，数据库系统要能进行隔离操作，以保证各个线程获取数据的准确性，在介绍数据库提供的各种隔离级别之前，我们先看看如果不考虑事务的隔离性，会发生的几种问题：
+
+持久性怎么实现呢？数据库崩溃恢复（crash-safe）是通过什么实现的？
+持久性是通过 redo log 和 double write 双写缓冲来实现的，我们操作数据的时候，
+
+会先写到内存的 buffer pool 里面，同时记录 redo log，如果在刷盘之前出现异常，在
+重启后就可以读取 redo log 的内容，写入到磁盘，保证数据的持久性。
+
+当然，恢复成功的前提是数据页本身没有被破坏，是完整的，这个通过双写缓冲
+（double write）保证。
+原子性，隔离性，持久性，最后都是为了实现一致性。
 
 # 隔离级别
 
@@ -207,6 +220,10 @@ DML (Data Manipulation Language)
 > 并用这个快照来提供一定级别(语句级或事务级)的一致性读取 Multi Version Concurrency
 > Control(MVCC)。
 
+
+
+
+
 ![image-20200717220018322](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\数据库锁.png)
 
 # 数据库锁
@@ -247,8 +264,128 @@ InnoDB 都支持
 
 
 
+4.1 记录锁
+第一种情况，当我们对于唯一性的索引（包括唯一索引和主键索引）使用等值查询
 
+4.2 间隙锁
+第二种情况，当我们查询的记录不存在，没有命中任何一个 record，无论是用等值
+查询还是范围查询的时候，它使用的都是间隙锁。
+举个例子，where id >4 and id <7，where id = 6
 
 间隙锁阻塞的就是插入
 最后的范围:
 最后一个 record的下一个左开右闭的区间  
+
+4.3 临键锁
+第三种情况，当我们使用了范围查询，不仅仅命中了 Record 记录，还包含了 Gap
+间隙，在这种情况下我们使用的就是临键锁，它是 MySQL 里面默认的行锁算法，相当于
+记录锁加上间隙锁。
+咕泡出品，必属精品 www.gupaoedu.com
+26
+其他两种退化的情况：
+唯一性索引，等值查询匹配到一条记录的时候，退化成记录锁。
+没有匹配到任何记录的时候，退化成间隙锁。
+比如我们使用>5 <9， 它包含了记录不存在的区间，也包含了一个 Record 7。
+
+临键锁，锁住最后一个 key 的下一个左开右闭的区间。
+
+
+
+
+
+
+
+4.4.1 d Read  Uncommited
+RU 隔离级别：不加锁。
+2 4.4.2  Serializable
+Serializable 所有的 select 语句都会被隐式的转化为 select ... in share mode，会
+和 update、delete 互斥。
+这两个很好理解，主要是 RR 和 RC 的区别？
+3 4.4.3 e Repeatable  Read
+RR 隔离级别下，普通的 select 使用快照读(snapshot read)，底层使用 MVCC 来实
+现。
+加锁的 select(select ... in share mode / select ... for update)以及更新操作
+update, delete 等语句使用当前读（current read），底层使用记录锁、或者间隙锁、
+临键锁。
+4 4.4.4 d Read  Commited
+RC 隔离级别下，普通的 select 都是快照读，使用 MVCC 实现。
+加锁的 select 都使用记录锁，因为没有 Gap Lock。
+咕泡出品，必属精品 www.gupaoedu.com
+28
+除了两种特殊情况——外键约束检查(foreign-key constraint checking)以及重复
+键检查(duplicate-key checking)时会使用间隙锁封锁区间。
+所以 RC 会出现幻读的问题。
+
+# 死锁
+
+1. 那么死锁需要满足什么条件？死锁的产生条件：
+
+   
+
+互斥（1）同一时刻只能有一个事务持有这把锁，
+
+（2）不能强行剥夺
+务需要在这个事务释放锁之后才能获取锁，而不可以强行剥夺，
+
+（3）形成等待环路
+待环路的时候，即发生死锁。
+
+# 命令
+
+```
+事务相关
+select version();
+// 存储引擎
+show variables like '%engine%';
+// 事务隔离级别
+show global variables like "tx_isolation";
+// 自动提交
+show variables like 'autocommit';
+// 锁等待时间 默认50
+show VARIABLES like 'innodb_lock_wait_timeout';
+// 
+show status like 'innodb_row_lock_%';
+//
+select * from information_schema.INNODB_TRX; -- 当前运行的所有事务 ，还有具体的语句
+select * from information_schema.INNODB_LOCKS; -- 当前出现的锁
+select * from information_schema.INNODB_LOCK_WAITS; -- 锁等待的对应关系
+```
+
+```
+Innodb_row_lock_current_waits：当前正在等待锁定的数量；
+Innodb_row_lock_time ：从系统启动到现在锁定的总时间长度，单位 ms；
+Innodb_row_lock_time_avg ：每次等待所花平均时间；
+Innodb_row_lock_time_max：从系统启动到现在等待最长的一次所花的时间；
+Innodb_row_lock_waits ：从系统启动到现在总共等待的次数。
+```
+
+如果一个事务长时间持有锁不释放，可以 kill 事务对应的线程 ID，也就是
+INNODB_TRX 表中的 trx_mysql_thread_id，例如执行 kill 4，kill 7，kill 8
+
+6.4 死锁的 避免
+1、 在程序中，操作多张表时，尽量以相同的顺序来访问（避免形成等待环路）；
+2、 批量操作单张表数据的时候，先对数据进行排序（避免形成等待环路）；
+3、 申请足够级别的锁，如果要操作数据，就申请排它锁；
+4、 尽量使用索引访问数据，避免没有 where 条件的操作，避免锁表；
+5、 如果可以，大事务化成小事务；
+6、 使用等值查询而不是范围查询查询数据，命中记录，避免间隙锁对并发的影响。
+
+# spring 事务
+
+![image-20210701201009034](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\事务\spring事务传播属性.png)
+
+
+
+数据库隔离
+
+![image-20210701201533833](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\事务\事务隔离.png)
+
+
+
+![image-20210701201705972](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\事务\定义.png)
+
+
+
+
+
+![image-20210701202141608](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\事务\spring隔离级别.png)
