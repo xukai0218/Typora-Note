@@ -59,6 +59,34 @@ to map
   toMap(StoreUserEntity::getUserId, Function.identity()))
 ```
 
+
+
+```
+  List<Map<String, Object>> maps = selectPicDictInfo(companyId);
+ 
+ Map<String, Integer> picNamesMap = maps.stream().filter(m -> Objects.equals(MapUtils.getInteger(m, "s_show_flag"), 1)).
+                collect(LinkedHashMap::new, (m, v) -> m.put(MapUtils.getString(v, "b_name"), MapUtils.getInteger(v, "b_code")), HashMap::putAll);
+```
+
+
+
+```
+        List<List<Map<String, Object>>> collect = productInfos.stream().collect(Collectors.groupingBy(e -> e.get("s_parent_id"))).values()
+                .stream().map(x -> {
+                    Map<String, Object> stringObjectMap = x.get(0);
+                    x.stream().map(xx -> {
+                        CommonPicInfoDto commonPicInfo = new CommonPicInfoDto();
+                        commonPicInfo.setId((Long) xx.get("id"));
+                        commonPicInfo.setParentId((Long) xx.get("s_parent_id"));
+                        commonPicInfo.setPictureType((Integer) xx.get("b_picture_type"));
+                        return commonPicInfo;
+                    });
+                    return x;
+                }).collect(Collectors.toList());
+```
+
+
+
 去重
 
 ```

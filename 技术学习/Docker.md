@@ -312,7 +312,7 @@ b874c56bec49        mysql               "docker-entrypoint.sh"   4 seconds ago  
 做了端口映射
 
 ```shell
-[root@localhost ~]# docker run -p 3306:3306 --name mysql -e MYSQL_ROOT_PASSWORD=123456 -d mysql
+[root@localhost ~]# docker run -p 3306:3306 --name mysql -e MYSQL_ROOT_PASSWORD=mysql -d mysql
 ad10e4bc5c6a0f61cbad43898de71d366117d120e39db651844c0e73863b9434
 [root@localhost ~]# docker ps
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
@@ -330,6 +330,15 @@ docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:tag --
 指定mysql的一些配置参数
 ```
 
+## 5 安装 redis
+
+```
+docker pull redis:lates
+docker run -itd --name redis-test -p 6379:6379 redis
+
+参数说明：
+
+--name：后面的是容器的名字；
 
 
 报错：ERROR 2059 (HY000): Authentication plugin '' cannot be loaded: ÕÒ²»µ½Ö¸¶¨µÄÄ£¿é¡£
@@ -346,6 +355,44 @@ mysql -uroot -p
 3.修改密码
 ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '1qwe32!QWE#@';
 ```
+
+Mac
+
+```
+docker run --name mysql5.7 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=mysql -d mysql/mysql-server
+
+这时使用宿主机连接没有授权访问，需要进入mysql修改mysql访问权限。
+docker exec -it mysql5.7 bash
+
+mysql -u root -p 
+
+#授权
+CREATE USER 'root'@'%' IDENTIFIED BY 'root';
+
+GRANT ALL ON *.* TO 'root'@'%';
+
+#刷新权限
+
+flush privileges;
+
+#修改root用户密码
+
+mysql> ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'mysql';
+
+#刷新权限
+
+mysql> flush privileges;
+
+---------------------------------------------------
+Host XXX is not allowed to connect to this MySQL server(这是由于Mysql配置了不支持远程连接引起的)
+
+给 root用户  配置通配符
+https://www.jianshu.com/p/eb3d9129d880
+```
+
+
+
+
 
 ## 4、安装 RabbitMq
 
@@ -401,6 +448,29 @@ $ docker exec -it mongo mongo admin
 > db.auth('admin', '123456')
 ```
 
+-p 6379:6379：映射容器服务的 6379 端口到宿主机的 6379 端口。外部可以直接通过宿主机ip:6379 访问到 Redis 的服务；
+
+```
+
+
+
+## 6 安装nacos
+
+官网
+
+https://nacos.io/en-us/docs/quick-start-docker.html
+
+https://www.jianshu.com/p/f01efe061056
+
+```
+docker pull nacos/nacos-server:latest
+
+mkdir -p ~/Users/xukai/dev_soft/nacos_docker/nacos01/standalone-logs ~/Users/xukai/dev_soft/nacos_docker/nacos01/init.d 
+~/Users/xukai/dev_soft/nacos_docker/nacos01/conf
+mkdir -p ~/Users/xukai/dev_soft/nacos_docker/nacos01/init.d 
+~/Users/xukai/dev_soft/nacos_docker/nacos01/conf
+
+```
 
 
 
