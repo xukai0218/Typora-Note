@@ -189,7 +189,7 @@ DML (Data Manipulation Language)
 
 
 
-![image-20200717214501460](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\事务隔离级别.png)
+![image-20200717214501460](../image\mysql\事务隔离级别.png)
 
 ```
 未提交读（Read uncommitted）        可能                            可能                      可能
@@ -224,7 +224,7 @@ DML (Data Manipulation Language)
 
 
 
-![image-20200717220018322](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\数据库锁.png)
+![image-20200717220018322](../image\mysql\数据库锁.png)
 
 # 数据库锁
 
@@ -236,31 +236,31 @@ DML (Data Manipulation Language)
 
 
 
-![image-20200717220412249](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\表锁行锁的区别.png)
+![image-20200717220412249](../image\mysql\表锁行锁的区别.png)
 
 MyISAM 支持 表锁 并发下降
 
 InnoDB 都支持
 
-![image-20200717220847367](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\数据库锁2.png)
+![image-20200717220847367](../image\mysql\数据库锁2.png)
 
 
 
-![image-20200717221024570](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\锁的模式png)
+![image-20200717221024570](../image\mysql\锁的模式png)
 
 
 
-![image-20200717221157081](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\共享锁.png)
+![image-20200717221157081](../image\mysql\共享锁.png)
 
 
 
-![image-20200717221428053](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\排它锁.png)
+![image-20200717221428053](../image\mysql\排它锁.png)
 
 
 
 区间定义
 
-![image-20200717224459229](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\区间定义.png)
+![image-20200717224459229](../image\mysql\区间定义.png)
 
 
 
@@ -372,20 +372,20 @@ INNODB_TRX 表中的 trx_mysql_thread_id，例如执行 kill 4，kill 7，kill 8
 
 # spring 事务
 
-![image-20210701201009034](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\事务\spring事务传播属性.png)
+![image-20210701201009034](../image\mysql\事务\spring事务传播属性.png)
 
 
 
 数据库隔离
 
-![image-20210701201533833](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\事务\事务隔离.png)
+![image-20210701201533833](../image\mysql\事务\事务隔离.png)
 
 
 
-![image-20210701201705972](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\事务\定义.png)
+![image-20210701201705972](../image\mysql\事务\定义.png)
 
 
 
 
 
-![image-20210701202141608](E:\Users\kai.xu\Desktop\My\Typora-Note\image\mysql\事务\spring隔离级别.png)
+![image-20210701202141608](../image\mysql\事务\spring隔离级别.png)

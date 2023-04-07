@@ -39,6 +39,18 @@ Map<String, List<String>> collect = detail.stream().collect(Collectors.groupingB
         });
         return categoryTree;
     }
+    
+    
+        private List<DictDepartTreeResponse> createTree(Long parentId, List<DictDepartTreeResponse> departments) {
+        List<DictDepartTreeResponse> tree = Lists.newArrayList();
+        for (DictDepartTreeResponse department : departments) {
+            if (Objects.equals(parentId, department.getParentId())) {
+                tree.add(department);
+                department.setChildren(createTree(department.getId(), departments));
+            }
+        }
+        return tree;
+    }
 ```
 
 // 获取id List
@@ -57,6 +69,11 @@ to map
     }
   Map<String, BaseScenarioVO> voMap = data.stream().collect(Collectors.toMap(BaseScenarioVO::getImage, BaseScenarioVO ->BaseScenarioVO));
   toMap(StoreUserEntity::getUserId, Function.identity()))
+  
+  
+  
+   Map<Long, Integer> map = request.stream().collect(HashMap::new, (m, v) -> m.put(v.getId(), v.getSeq()), HashMap::putAll);
+  
 ```
 
 
